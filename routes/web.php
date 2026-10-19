@@ -130,9 +130,6 @@ Route::get('/__db-reset/{token}', function (string $token) {
     return response('<pre>' . e(print_r($log, true)) . '</pre>');
 });
 
-    return response('<pre>' . e(print_r($log, true)) . '</pre>');
-});
-
 Route::get('/', function () {
     return view('samuel.home');
 });

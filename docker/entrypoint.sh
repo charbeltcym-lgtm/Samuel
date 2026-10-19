@@ -4,6 +4,10 @@ set -e
 # Logs applicatifs dans un fichier (lisible via storage/logs/laravel.log).
 export LOG_CHANNEL=single
 
+# Neon : le host "pooler" casse les migrations (DDL). On force le host direct.
+if [ -n "${DB_URL:-}" ]; then export DB_URL="${DB_URL/-pooler/}"; fi
+if [ -n "${DB_HOST:-}" ]; then export DB_HOST="${DB_HOST/-pooler/}"; fi
+
 # Render fournit le port via la variable PORT (defaut 80 en local).
 PORT="${PORT:-80}"
 
@@ -19,30 +23,21 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-# Base de donnees (Neon / Postgres).
-# Si SAMUEL_FRESH_DB=true : reinitialisation complete du schema (migrate:fresh).
+# Base de donnees (Neon / Postgres) : auto-reparation du schema.
+# Si SAMUEL_FRESH_DB=true : reinitialisation complete forcee.
 if [ "${SAMUEL_FRESH_DB:-}" = "true" ]; then
-    echo "SAMUEL_FRESH_DB=true : reinitialisation complete de la base (migrate:fresh --force)."
+    echo "SAMUEL_FRESH_DB=true : reinitialisation complete de la base."
     php artisan migrate:fresh --force || true
+    php artisan db:seed --class="Database\\Seeders\\SuperAdminSeeder" --force || true
 else
-    # Neon peut mettre quelques secondes a se reveiller : on retente.
-    migrated=0
+    # Neon peut mettre quelques secondes a se reveiller : on retente l'auto-reparation.
     for i in 1 2 3 4 5; do
-        if php artisan migrate --force; then
-            migrated=1
+        if php artisan samuel:ensure-schema; then
             break
         fi
-        echo "Migration echouee (tentative $i/5), nouvelle tentative dans 5s..."
+        echo "Preparation de la base echouee (tentative $i/5), nouvelle tentative dans 5s..."
         sleep 5
     done
-    if [ "$migrated" -ne 1 ]; then
-        echo "AVERTISSEMENT : migrations non appliquees apres 5 tentatives. Demarrage du serveur malgre tout." >&2
-    fi
-fi
-
-# Super administrateur initial (optionnel, via variables d'environnement).
-if [ -n "${SAMUEL_ADMIN_EMAIL:-}" ] && [ -n "${SAMUEL_ADMIN_PASSWORD:-}" ]; then
-    php artisan db:seed --class="Database\\Seeders\\SuperAdminSeeder" --force || true
 fi
 
 # Caches de production.
