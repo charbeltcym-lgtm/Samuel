@@ -112,6 +112,54 @@ Route::get('/__db-reset/{token}', function (string $token) {
         $log['TEST'] = $test;
     }
 
+    if (request('test2')) {
+        $t = [];
+        $try = function (string $label, callable $cb) use (&$t) {
+            try {
+                $res = $cb();
+                $t[$label] = is_bool($res) ? ($res ? 'true' : 'false') : (is_scalar($res) ? (string) $res : 'ok');
+            } catch (\Throwable $e) {
+                $t[$label] = get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine();
+            }
+        };
+
+        $try('http_subrequest_login', function () {
+            $prev = app(\Illuminate\Contracts\Debug\ExceptionHandler::class);
+            app()->instance(\Illuminate\Contracts\Debug\ExceptionHandler::class, new class implements \Illuminate\Contracts\Debug\ExceptionHandler {
+                public function report(\Throwable $e)
+                {
+                }
+
+                public function render($request, \Throwable $e)
+                {
+                    throw $e;
+                }
+
+                public function renderForConsole($output, \Throwable $e)
+                {
+                }
+            });
+
+            try {
+                $sub = \Illuminate\Http\Request::create('/login', 'POST', [
+                    '_token' => csrf_token(),
+                    'email' => 'charbeltcym@gmail.com',
+                    'password' => '12345678',
+                ]);
+                $sub->setLaravelSession(app('session.store'));
+                $resp = app(\Illuminate\Contracts\Http\Kernel::class)->handle($sub);
+                return 'status=' . $resp->getStatusCode();
+            } finally {
+                app()->instance(\Illuminate\Contracts\Debug\ExceptionHandler::class, $prev);
+            }
+        });
+
+        $try('route_dashboard', fn () => route('dashboard', absolute: false));
+        $try('session_regenerate', fn () => app('session.store')->regenerate() ? 'ok' : 'x');
+
+        $log['TEST2'] = $t;
+    }
+
     $logFile = storage_path('logs/laravel.log');
     $log['log_tail'] = is_file($logFile) ? substr(file_get_contents($logFile), -5000) : '(aucun log)';
 
