@@ -51,9 +51,13 @@
                                 <td>{{ $inscription->created_at->format('d/m/Y') }}</td>
                                 <td><span class="badge badge-pending">En attente</span></td>
                                 <td>
-                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                        <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} et générer le code d\'activation ?');">
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                                        <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} avec le role selectionne et generer le code d\'activation ?');" style="display:flex; gap:6px; align-items:center;">
                                             @csrf
+                                            <select name="role" style="padding:5px 8px; border:1px solid #E5E7EB; border-radius:8px; font-size:13px; background:#fff;">
+                                                <option value="user">Simple Samuel</option>
+                                                <option value="admin">Administrateur</option>
+                                            </select>
                                             <button type="submit" class="btn btn-green" style="padding:5px 10px;">Valider</button>
                                         </form>
                                         <form action="{{ route('inscriptions.rejeter', $inscription->id) }}" method="POST" onsubmit="return confirm('Rejeter l\'inscription de {{ $inscription->name }} ?');">

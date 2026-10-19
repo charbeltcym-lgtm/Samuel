@@ -207,12 +207,19 @@ Route::middleware(['auth', 'web.super'])->group(function () {
     });
 
     Route::post('/inscriptions/{id}/valider', function ($id) {
+        $role = request()->validate([
+            'role' => 'nullable|in:user,admin',
+        ])['role'] ?? 'user';
+
         $user = \App\Models\User::where('status', 'pending')->findOrFail($id);
+
+        $user->role = $role;
 
         if (!$user->activation_code) {
             $user->activation_code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $user->save();
         }
+
+        $user->save();
 
         $envoye = false;
         try {
@@ -223,14 +230,16 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             $envoye = false;
         }
 
+        $roleLabel = $role === 'admin' ? 'Administrateur' : 'Simple Samuel';
+
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
             'action' => 'inscription.valider',
-            'description' => 'Inscription validée : ' . $user->name,
+            'description' => 'Inscription validée (' . $roleLabel . ') : ' . $user->name,
             'ip_address' => request()->ip(),
         ]);
 
-        $message = 'Inscription de ' . $user->name . ' validée. Code : ' . $user->activation_code
+        $message = 'Inscription de ' . $user->name . ' validée comme ' . $roleLabel . '. Code : ' . $user->activation_code
             . ($envoye ? ' (envoyé par email à ' . $user->email . ')' : ' (email non envoyé, à transmettre manuellement)');
 
         return back()->with('success', $message);
