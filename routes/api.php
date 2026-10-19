@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+// --- Mot de passe oublié (public, limité contre l'abus) ---
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
+    ->middleware('throttle:3,1');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:5,1');
+
 // --- Chapitres (public) ---
 Route::get('/chapitres', [SamuelController::class, 'index']);
 Route::get('/chapitres/{id}', [SamuelController::class, 'show']);

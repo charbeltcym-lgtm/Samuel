@@ -26,6 +26,8 @@ class User extends Authenticatable
         'api_token',
         'role',
         'activation_code',
+        'reset_code',
+        'reset_code_expires_at',
         'status',
     ];
 
@@ -38,6 +40,9 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'api_token',
+        'activation_code',
+        'reset_code',
+        'reset_code_expires_at',
     ];
 
     /**
@@ -52,6 +57,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => 'string',
             'activation_code' => 'string',
+            'reset_code' => 'string',
+            'reset_code_expires_at' => 'datetime',
             'status' => 'string',
         ];
     }

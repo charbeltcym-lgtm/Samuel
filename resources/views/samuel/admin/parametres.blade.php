@@ -13,13 +13,9 @@
         <header class="topbar">
             <div class="page-title">Paramètres du compte</div>
             <div class="topbar-right">
-                <div class="bell">🔔<span class="dot"></span></div>
+                @include('samuel.dashboards.partials.notification-bell')
                 <div class="profile">
-                    @if (auth()->user()->photo)
-                        <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="Photo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                    @else
-                        <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                    @endif
+                    @include('samuel.dashboards.partials.avatar')
                     <div class="info"><div class="name">{{ auth()->user()->name }}</div><div class="role">Administrateur principal</div></div>
                 </div>
             </div>

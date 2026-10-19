@@ -32,7 +32,8 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interacti
     && sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf \
     && printf '\n<Directory /var/www/html/public>\nAllowOverride All\nRequire all granted\n</Directory>\n' >> /etc/apache2/sites-available/000-default.conf \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R ug+rwx storage bootstrap/cache
+    && chmod -R ug+rwx storage bootstrap/cache \
+    && chmod +x docker/entrypoint.sh
 
 EXPOSE 10000
-CMD ["/bin/sh", "-c", "php artisan config:clear && (php artisan migrate --force -vvv 2>&1 || true) && (php artisan storage:link || true) && exec apache2-foreground"]
+CMD ["/bin/sh", "/var/www/html/docker/entrypoint.sh"]

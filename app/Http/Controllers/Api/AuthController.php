@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResetPasswordCodeMail;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -95,5 +97,70 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json($request->user());
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Aucun compte n\'est associé à cet email.'], 422);
+        }
+
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'reset_code' => $code,
+            'reset_code_expires_at' => now()->addMinutes(30),
+        ]);
+
+        $envoye = false;
+        try {
+            Mail::to($user->email)->send(new ResetPasswordCodeMail($user->name, $code));
+            $envoye = true;
+        } catch (\Throwable $e) {
+            $envoye = false;
+        }
+
+        return response()->json([
+            'message' => $envoye
+                ? 'Un code de réinitialisation vous a été envoyé par email.'
+                : 'Code généré, mais l\'email n\'a pas pu être envoyé. Contactez l\'administrateur.',
+            'email_sent' => $envoye,
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user || !$user->reset_code || $user->reset_code !== $data['code']) {
+            return response()->json(['message' => 'Code de réinitialisation invalide.'], 422);
+        }
+
+        if ($user->reset_code_expires_at && now()->greaterThan($user->reset_code_expires_at)) {
+            return response()->json(['message' => 'Ce code a expiré. Veuillez refaire la demande.'], 422);
+        }
+
+        $user->update([
+            'password' => $data['password'],
+            'reset_code' => null,
+            'reset_code_expires_at' => null,
+            'api_token' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Mot de passe réinitialisé avec succès. Vous pouvez vous connecter.',
+        ]);
     }
 }

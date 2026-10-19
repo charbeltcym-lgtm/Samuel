@@ -1,0 +1,65 @@
+# Blueprint Render pour l'application Laravel "Samuel".
+# Deploiement via un Dockerfile (Render n'a pas de runtime PHP natif).
+#
+# Etapes :
+#   1. Pousser ce dossier Laravel sur un depot Git (GitHub/GitLab).
+#   2. Sur Render : New + Blueprint, pointer sur le depot (ce render.yaml est detecte).
+#   3. Renseigner les variables marquees "sync: false" (secret) dans le dashboard :
+#        - DB_URL                 : chaine de connexion Neon (postgresql://...?sslmode=require)
+#        - APP_KEY                : resultat de  php artisan key:generate --show
+#        - BREVO_API_KEY          : cle API Brevo
+#        - MAIL_FROM_ADDRESS      : expediteur verifie chez Brevo
+#        - SAMUEL_ADMIN_EMAIL     : email du super administrateur
+#        - SAMUEL_ADMIN_PASSWORD  : mot de passe du super administrateur
+services:
+  - type: web
+    name: samuel-app
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/chapitres
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: Samuel
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        value: https://samuel-1-bhvd.onrender.com
+      - key: APP_LOCALE
+        value: fr
+      - key: APP_FALLBACK_LOCALE
+        value: fr
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: MAIL_MAILER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Samuel
+      - key: SAMUEL_ADMIN_NAME
+        value: Charbel TONOU
+      - key: SAMUEL_ADMIN_EMAIL
+        sync: false
+      - key: SAMUEL_ADMIN_PASSWORD
+        sync: false

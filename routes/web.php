@@ -387,11 +387,6 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         // Mise à jour du profil
         return back()->with('success', 'Profil mis à jour');
     })->name('profil.update');
-
-    Route::post('/deconnexion', [
-        'action' => 'App\Http\Controllers\Auth\SessionController::destroy',
-        'as' => 'logout',
-    ]);
 });
 
 require __DIR__.'/auth.php';

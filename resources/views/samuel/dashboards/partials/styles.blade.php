@@ -16,10 +16,13 @@
     .topbar { background: white; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 40; }
     .topbar .page-title { color: #172554; font-size: 20px; font-weight: bold; }
     .topbar-right { display: flex; align-items: center; gap: 18px; }
-    .bell { position: relative; cursor: pointer; font-size: 20px; }
-    .bell .dot { position: absolute; top: -2px; right: -4px; width: 9px; height: 9px; background: #DC2626; border-radius: 50%; border: 2px solid white; }
+    .notif-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; background: #F3F4F6; color: #172554; text-decoration: none; border: 1px solid #E5E7EB; transition: background .15s ease, transform .15s ease, box-shadow .15s ease; }
+    .notif-bell:hover { background: #E8ECF3; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(23,37,84,0.12); }
+    .notif-bell:active { transform: translateY(0); }
+    .notif-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 6px; background: #DC2626; color: #fff; font-size: 11px; font-weight: bold; border-radius: 20px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; line-height: 1; }
     .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .profile .avatar { width: 40px; height: 40px; border-radius: 50%; background: #D4A72C; color: #172554; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+    .profile img.avatar { object-fit: cover; background: #E5E7EB; }
     .profile .info { line-height: 1.2; }
     .profile .info .name { color: #172554; font-size: 14px; font-weight: bold; }
     .profile .info .role { color: #6B7280; font-size: 12px; }
@@ -71,5 +74,6 @@
     @media (max-width: 600px) {
         .topbar-right { gap: 12px; }
         .profile .avatar { width: 34px; height: 34px; font-size: 14px; }
+        .notif-bell { width: 38px; height: 38px; }
     }
 </style>

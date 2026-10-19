@@ -27,10 +27,13 @@
         .topbar { background: white; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 40; }
         .topbar .page-title { color: #172554; font-size: 20px; font-weight: bold; }
         .topbar-right { display: flex; align-items: center; gap: 18px; }
-        .bell { position: relative; cursor: pointer; font-size: 20px; }
-        .bell .dot { position: absolute; top: -2px; right: -4px; width: 9px; height: 9px; background: #DC2626; border-radius: 50%; border: 2px solid white; }
+        .notif-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; background: #F3F4F6; color: #172554; text-decoration: none; border: 1px solid #E5E7EB; transition: background .15s ease, transform .15s ease, box-shadow .15s ease; }
+        .notif-bell:hover { background: #E8ECF3; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(23,37,84,0.12); }
+        .notif-bell:active { transform: translateY(0); }
+        .notif-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 6px; background: #DC2626; color: #fff; font-size: 11px; font-weight: bold; border-radius: 20px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; line-height: 1; }
         .profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .profile .avatar { width: 40px; height: 40px; border-radius: 50%; background: #D4A72C; color: #172554; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .profile img.avatar { object-fit: cover; background: #E5E7EB; }
         .profile .info { line-height: 1.2; }
         .profile .info .name { color: #172554; font-size: 14px; font-weight: bold; }
         .profile .info .role { color: #6B7280; font-size: 12px; }
@@ -180,12 +183,9 @@
         <header class="topbar">
             <div class="page-title">Vue d'ensemble</div>
             <div class="topbar-right">
-                @php $notifCount = \App\Models\Notification::where('user_id', auth()->id())->whereNull('read_at')->count(); @endphp
-                <a href="/notifications" class="bell" title="Notifications" style="text-decoration:none;">🔔@if ($notifCount > 0)<span class="dot"></span>@endif
-                    @if ($notifCount > 0)<span style="background:#DC2626; color:white; font-size:11px; font-weight:bold; padding:2px 7px; border-radius:20px; margin-left:2px;">{{ $notifCount }}</span>@endif
-                </a>
+                @include('samuel.dashboards.partials.notification-bell')
                 <div class="profile">
-                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                    @include('samuel.dashboards.partials.avatar')
                     <div class="info">
                         <div class="name">{{ auth()->user()->name }}</div>
                         <div class="role">Administrateur principal</div>

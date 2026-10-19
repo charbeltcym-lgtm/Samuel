@@ -13,9 +13,9 @@
         <header class="topbar">
             <div class="page-title">Gestion des administrateurs</div>
             <div class="topbar-right">
-                <div class="bell">🔔<span class="dot"></span></div>
+                @include('samuel.dashboards.partials.notification-bell')
                 <div class="profile">
-                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                    @include('samuel.dashboards.partials.avatar')
                     <div class="info"><div class="name">{{ auth()->user()->name }}</div><div class="role">Administrateur principal</div></div>
                 </div>
             </div>

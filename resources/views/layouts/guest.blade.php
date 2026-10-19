@@ -5,33 +5,38 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ $title ?? 'Connexion' }} — {{ config('app.name', 'Samuel') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
+    <body class="font-sans antialiased">
+        <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#172554] via-[#1c2b4a] to-[#0d1733] px-4 py-10">
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
-            </div>
+            <div class="w-full max-w-md">
+                <!-- En-tete / marque -->
+                <div class="flex flex-col items-center mb-6">
+                    <div class="rounded-full border-2 border-[#D4A72C] p-1 shadow-lg shadow-[#D4A72C]/30">
+                        <img src="{{ asset('images/logo.png') }}" alt="Samuel" class="h-24 w-24 rounded-full object-cover">
+                    </div>
+                    <h1 class="mt-4 text-3xl font-extrabold tracking-[0.35em] text-[#D4A72C]">SAMUEL</h1>
+                    <p class="mt-1 text-xs tracking-[0.3em] text-white/70">FOI • SERVICE • ENGAGEMENT</p>
+                </div>
 
-            <!-- Pied de page -->
-            <footer class="mt-auto w-full text-center py-6 text-sm text-gray-500">
-                <div class="text-[#172554] font-bold">Samuel App</div>
-                <div class="text-[#D4A72C] text-xs tracking-[0.2em] mt-1">Foi &bull; Service &bull; Engagement</div>
-                <div class="mt-2">&copy; 2026 Samuel App - Tous droits réservés</div>
-            </footer>
+                <!-- Carte -->
+                <div class="rounded-2xl bg-white p-8 shadow-2xl">
+                    {{ $slot }}
+                </div>
+
+                <!-- Pied de page -->
+                <p class="mt-6 text-center text-xs text-white/50">
+                    &copy; {{ date('Y') }} Samuel App — Tous droits réservés
+                </p>
+            </div>
         </div>
     </body>
 </html>
