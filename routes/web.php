@@ -78,6 +78,40 @@ Route::get('/__db-reset/{token}', function (string $token) {
         $log['super_admin'] = optional(\App\Models\User::where('role', 'super_admin')->first())->email ?? 'AUCUN';
     });
 
+    if (request('test')) {
+        $test = [];
+        $try = function (string $label, callable $cb) use (&$test) {
+            try {
+                $res = $cb();
+                $test[$label] = is_bool($res) ? ($res ? 'true' : 'false') : ($res ?? 'null');
+            } catch (\Throwable $e) {
+                $test[$label] = get_class($e) . ': ' . $e->getMessage();
+            }
+        };
+
+        $try('cache_store', fn () => config('cache.default'));
+        $try('session_driver', fn () => config('session.driver'));
+        $try('rate_limiter', fn () => \Illuminate\Support\Facades\RateLimiter::tooManyAttempts('test|127.0.0.1', 5) ? 'limited' : 'not');
+        $try('cache_write', function () {
+            \Illuminate\Support\Facades\Cache::put('samuel_test', 'ok', 60);
+            return \Illuminate\Support\Facades\Cache::get('samuel_test');
+        });
+        $try('user_role', fn () => optional(\App\Models\User::where('email', 'charbeltcym@gmail.com')->first())->role ?? 'INTROUVABLE');
+        $try('hash_check', function () {
+            $u = \App\Models\User::where('email', 'charbeltcym@gmail.com')->first();
+            return $u && \Illuminate\Support\Facades\Hash::check('12345678', $u->password) ? 'OK' : 'NON';
+        });
+        $try('auth_attempt', fn () => \Illuminate\Support\Facades\Auth::attempt(['email' => 'charbeltcym@gmail.com', 'password' => '12345678']));
+        $try('login_request', function () {
+            $req = \App\Http\Requests\Auth\LoginRequest::create('/login', 'POST', ['email' => 'charbeltcym@gmail.com', 'password' => '12345678']);
+            $req->setContainer(app())->setRedirector(app('redirect'));
+            $req->validateResolved();
+            $req->authenticate();
+            return 'OK';
+        });
+        $log['TEST'] = $test;
+    }
+
     $logFile = storage_path('logs/laravel.log');
     $log['log_tail'] = is_file($logFile) ? substr(file_get_contents($logFile), -5000) : '(aucun log)';
 
