@@ -17,14 +17,14 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = env('SAMUEL_ADMIN_EMAIL');
-        $password = env('SAMUEL_ADMIN_PASSWORD');
+        $email = config('samuel.admin_email');
+        $password = config('samuel.admin_password');
 
         if (!$email || !$password) {
             return;
         }
 
-        $name = env('SAMUEL_ADMIN_NAME', 'Administrateur principal');
+        $name = config('samuel.admin_name', 'Administrateur principal');
 
         User::updateOrCreate(
             ['email' => $email],
