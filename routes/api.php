@@ -47,6 +47,7 @@ Route::middleware(['api.token', 'api.role:admin,super_admin'])->group(function (
     Route::get('/admin/samuels', [SamuelController::class, 'getSamuels']);
     Route::post('/admin/samuels', [SamuelController::class, 'storeSamuel']);
     Route::put('/admin/samuels/{id}', [SamuelController::class, 'updateSamuel']);
+    Route::delete('/admin/samuels/{id}', [SamuelController::class, 'destroySamuel']);
 });
 
 // --- Super administrateur ---

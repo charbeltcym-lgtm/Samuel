@@ -111,13 +111,36 @@
         .footer .motto { color: #D4A72C; font-size: 12px; margin-top: 4px; letter-spacing: 2px; }
 
         /* ---------- Responsive ---------- */
+        .nav-toggle { display: none; }
+        .hamburger { display: none; }
         @media (max-width: 1024px) { .grid-2, .grid-2-equal { grid-template-columns: 1fr; } }
-        @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+        @media (max-width: 900px) {
+            .main { margin-left: 0; }
+            .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.35); }
+            .nav-toggle:checked ~ .sidebar { transform: translateX(0); }
+            .hamburger { display: flex; align-items: center; justify-content: center; position: fixed; top: 12px; left: 12px; z-index: 60; width: 42px; height: 42px; border-radius: 10px; background: #172554; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+            .topbar { padding: 12px 16px 12px 64px; }
+            .topbar .page-title { font-size: 17px; }
+            .topbar .profile .info { display: none; }
+            .content { padding: 16px; }
+            .panel { padding: 16px; overflow-x: auto; }
+            .panel table { min-width: 520px; }
+            .welcome h1 { font-size: 20px; }
+            .stat-card .value { font-size: 28px; }
+        }
+        @media (max-width: 600px) {
+            .topbar-right { gap: 12px; }
+            .profile .avatar { width: 34px; height: 34px; font-size: 14px; }
+            .stats { grid-template-columns: 1fr; }
+            .donut-wrap { flex-direction: column; align-items: flex-start; }
+            .clock { text-align: left; }
+        }
     </style>
 </head>
 <body>
 
     <!-- Barre latérale -->
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
     <aside class="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/logo.png') }}" alt="Samuel App">
@@ -148,6 +171,7 @@
             Connecté en tant que<br><strong style="color:#D4A72C">Super administrateur</strong>
         </div>
     </aside>
+    <label for="nav-toggle" class="hamburger">☰</label>
 
     <!-- Zone principale -->
     <div class="main">
@@ -171,6 +195,12 @@
         </header>
 
         <div class="content">
+
+            @if (session('success'))
+                <div style="background:#dcfce7; color:#15803D; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px; word-break:break-word;">
+                    {{ session('success') }}
+                </div>
+            @endif
 
             <!-- Accueil + horloge -->
             <div class="welcome">
@@ -244,8 +274,16 @@
                                     <td>{{ $inscription->created_at->format('d/m/Y') }}</td>
                                     <td><span class="badge badge-pending">En attente</span></td>
                                     <td>
-                                        <button class="btn btn-green" style="padding:5px 10px;">Valider</button>
-                                        <button class="btn btn-red" style="padding:5px 10px;">Rejeter</button>
+                                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                            <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} et générer le code d\'activation ?');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-green" style="padding:5px 10px;">Valider</button>
+                                            </form>
+                                            <form action="{{ route('inscriptions.rejeter', $inscription->id) }}" method="POST" onsubmit="return confirm('Rejeter l\'inscription de {{ $inscription->name }} ?');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-red" style="padding:5px 10px;">Rejeter</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -346,10 +384,7 @@
         </div>
 
         <!-- Pied de page -->
-        <footer class="footer">
-            <div class="brand">Samuel App • Administration principale</div>
-            <div class="motto">Foi • Service • Engagement</div>
-        </footer>
+        @include('samuel.dashboards.partials.footer')
 
     </div>
 

@@ -21,6 +21,18 @@
             </div>
         </header>
         <div class="content">
+            @if (session('success'))
+                <div style="background:#dcfce7; color:#15803D; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px; word-break:break-word;">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div style="background:#fee2e2; color:#DC2626; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px;">
+                    <ul style="margin-left:18px;">
+                        @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                    </ul>
+                </div>
+            @endif
             <div class="panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                     <h3 style="margin:0;">Demandes d'inscription ({{ $inscriptions->count() }})</h3>
@@ -39,8 +51,16 @@
                                 <td>{{ $inscription->created_at->format('d/m/Y') }}</td>
                                 <td><span class="badge badge-pending">En attente</span></td>
                                 <td>
-                                    <button class="btn btn-green" style="padding:5px 10px;">Valider</button>
-                                    <button class="btn btn-red" style="padding:5px 10px;">Rejeter</button>
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                        <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} et générer le code d\'activation ?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-green" style="padding:5px 10px;">Valider</button>
+                                        </form>
+                                        <form action="{{ route('inscriptions.rejeter', $inscription->id) }}" method="POST" onsubmit="return confirm('Rejeter l\'inscription de {{ $inscription->name }} ?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-red" style="padding:5px 10px;">Rejeter</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -49,7 +69,7 @@
                 @endif
             </div>
         </div>
-        <footer class="footer"><div class="brand">Samuel App • Administration principale</div><div class="motto">Foi • Service • Engagement</div></footer>
+        @include('samuel.dashboards.partials.footer')
     </div>
 </body>
 </html>

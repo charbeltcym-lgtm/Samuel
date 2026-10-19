@@ -31,6 +31,13 @@
             <main>
                 @yield('content')
             </main>
+
+            <!-- Pied de page -->
+            <footer class="bg-[#172554] text-gray-400 text-center py-6 mt-10 text-sm">
+                <div class="text-white font-bold">Samuel App</div>
+                <div class="text-[#D4A72C] text-xs tracking-[0.2em] mt-1">Foi &bull; Service &bull; Engagement</div>
+                <div class="mt-2">&copy; 2026 Samuel App - Tous droits réservés</div>
+            </footer>
         </div>
     </body>
 </html>

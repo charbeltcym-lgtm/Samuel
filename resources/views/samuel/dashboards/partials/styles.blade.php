@@ -53,5 +53,23 @@
     .footer { background: #172554; color: #9CA3AF; text-align: center; padding: 22px; font-size: 14px; }
     .footer .brand { color: white; font-weight: bold; }
     .footer .motto { color: #D4A72C; font-size: 12px; margin-top: 4px; letter-spacing: 2px; }
-    @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+    .nav-toggle { display: none; }
+    .hamburger { display: none; }
+    @media (max-width: 900px) {
+        .main { margin-left: 0; }
+        .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.35); }
+        .nav-toggle:checked ~ .sidebar { transform: translateX(0); }
+        .hamburger { display: flex; align-items: center; justify-content: center; position: fixed; top: 12px; left: 12px; z-index: 60; width: 42px; height: 42px; border-radius: 10px; background: #172554; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+        .topbar { padding: 12px 16px 12px 64px; }
+        .topbar .page-title { font-size: 17px; }
+        .topbar .profile .info { display: none; }
+        .content { padding: 16px; }
+        .panel { padding: 16px; overflow-x: auto; }
+        .panel table { min-width: 520px; }
+        h1 { font-size: 20px; }
+    }
+    @media (max-width: 600px) {
+        .topbar-right { gap: 12px; }
+        .profile .avatar { width: 34px; height: 34px; font-size: 14px; }
+    }
 </style>

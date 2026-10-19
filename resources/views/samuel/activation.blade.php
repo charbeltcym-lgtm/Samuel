@@ -1,4 +1,7 @@
-<main class="py-12">
+@extends('layouts.app')
+
+@section('content')
+<div class="py-12">
     <div class="max-w-md mx-auto px-4">
         <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg mx-auto border border-[#e2e8f0]">
             <h2 class="text-2xl font-bold text-center text-[#172554] mb-6">Activation de votre compte</h2>
@@ -25,4 +28,6 @@
                 <a href="{{ route('login') }}" class="font-medium text-primary-600 hover:underline">Connectez-vous ici</a>
             </p>
         </div>
-    </main>
+    </div>
+</div>
+@endsection

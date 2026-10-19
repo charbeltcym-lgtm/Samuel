@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -25,6 +26,14 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        if ($request->user()->role !== 'super_admin') {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => "L'accès web est réservé à l'administrateur principal pour le moment.",
+            ]);
+        }
 
         $request->session()->regenerate();
 

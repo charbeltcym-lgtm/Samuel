@@ -65,6 +65,12 @@ return [
             'transport' => 'resend',
         ],
 
+        'brevo' => [
+            'transport' => 'brevo',
+            'dsn' => env('BREVO_DSN')
+                ?: (env('BREVO_API_KEY') ? 'brevo+api://'.env('BREVO_API_KEY').'@default' : null),
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),

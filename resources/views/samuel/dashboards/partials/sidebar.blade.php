@@ -1,3 +1,4 @@
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
 <aside class="sidebar">
     <div class="sidebar-logo">
         <img src="{{ asset('images/logo.png') }}" alt="Samuel App">
@@ -33,3 +34,4 @@
         Connecté en tant que<br><strong style="color:#D4A72C">Super administrateur</strong>
     </div>
 </aside>
+<label for="nav-toggle" class="hamburger">☰</label>

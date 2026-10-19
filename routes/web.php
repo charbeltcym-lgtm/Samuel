@@ -52,9 +52,13 @@ Route::get('/chapitres/{numero}', function ($numero) {
 
     abort_unless(isset($chapitres[$numero]), 404);
 
+    $chemin = resource_path("chapitres/{$numero}.html");
+    $contenu = is_file($chemin) ? file_get_contents($chemin) : null;
+
     return view('samuel.chapitre', [
         'numero' => $numero,
         'titre' => $chapitres[$numero],
+        'contenu' => $contenu,
     ]);
 })->name('chapitre.show');
 
@@ -67,8 +71,29 @@ Route::get('/inscription', function () {
 });
 
 Route::post('/inscription', function () {
-    // Traitement de l'inscription
-    return back()->with('success', 'Votre inscription a été enregistrée avec succès. Vous recevrez un code d\'activation par email.');
+    $data = request()->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $user = \App\Models\User::create([
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'password' => $data['password'],
+        'role' => 'user',
+        'status' => 'pending',
+    ]);
+
+    \App\Models\Notification::notifierAdmins(
+        'Nouvelle inscription (web)',
+        $user->name . ' s\'est inscrit depuis le site web. En attente de validation.',
+        'info',
+        'web',
+        ['user_id' => $user->id]
+    );
+
+    return back()->with('success', 'Votre inscription a bien été enregistrée. Un administrateur va la valider, puis vous recevrez votre code d\'activation par email.');
 })->name('registration.store');
 
 Route::get('/activation/{code}', function ($code) {
@@ -80,14 +105,14 @@ Route::post('/verifier-code', function () {
     return back()->with('success', 'Code vérifié avec succès');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'web.super'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
 
         if ($user->role === 'super_admin') {
             $derniere = \App\Models\Presence::max('date_repetition');
             $stats = [
-                'total_samuels' => \App\Models\User::where('role', 'user')->count(),
+                'total_samuels' => \App\Models\Samuel::count(),
                 'total_administrateurs' => \App\Models\User::whereIn('role', ['admin', 'super_admin'])->count(),
                 'inscriptions_en_attente' => \App\Models\User::where('status', 'pending')->count(),
                 'derniere_repetition' => $derniere,
@@ -128,24 +153,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/nouveau-samuel', function () {
         $data = request()->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'telephone' => 'nullable|string|max:30',
-            'password' => 'required|string|min:8',
+            'nom' => 'required|string|max:255',
+            'prenoms' => 'required|string|max:255',
         ]);
 
-        $user = \App\Models\User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => 'user',
-            'status' => 'active',
+        $samuel = \App\Models\Samuel::create([
+            'nom' => trim($data['nom']),
+            'prenoms' => trim($data['prenoms']),
         ]);
 
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
             'action' => 'samuel.create',
-            'description' => 'Nouveau Samuel ajouté : ' . $data['name'],
+            'description' => 'Nouveau Samuel ajouté : ' . $samuel->nom_complet,
             'ip_address' => request()->ip(),
         ]);
 
@@ -186,10 +206,71 @@ Route::middleware('auth')->group(function () {
         return view('samuel.admin.inscriptions', compact('inscriptions'));
     });
 
+    Route::post('/inscriptions/{id}/valider', function ($id) {
+        $user = \App\Models\User::where('status', 'pending')->findOrFail($id);
+
+        if (!$user->activation_code) {
+            $user->activation_code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $user->save();
+        }
+
+        $envoye = false;
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)
+                ->send(new \App\Mail\ActivationCodeMail($user->name, $user->activation_code));
+            $envoye = true;
+        } catch (\Throwable $e) {
+            $envoye = false;
+        }
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'inscription.valider',
+            'description' => 'Inscription validée : ' . $user->name,
+            'ip_address' => request()->ip(),
+        ]);
+
+        $message = 'Inscription de ' . $user->name . ' validée. Code : ' . $user->activation_code
+            . ($envoye ? ' (envoyé par email à ' . $user->email . ')' : ' (email non envoyé, à transmettre manuellement)');
+
+        return back()->with('success', $message);
+    })->name('inscriptions.valider');
+
+    Route::post('/inscriptions/{id}/rejeter', function ($id) {
+        $user = \App\Models\User::where('status', 'pending')->findOrFail($id);
+        $user->update(['status' => 'disabled', 'activation_code' => null]);
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'inscription.rejeter',
+            'description' => 'Inscription rejetée : ' . $user->name,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Inscription de ' . $user->name . ' rejetée.');
+    })->name('inscriptions.rejeter');
+
     Route::get('/samuels', function () {
-        $samuels = \App\Models\User::where('role', 'user')->orderByDesc('created_at')->get();
+        $samuels = \App\Models\Samuel::orderByDesc('created_at')->get();
         return view('samuel.admin.samuels', compact('samuels'));
     });
+
+    Route::delete('/samuels/{id}', function ($id) {
+        $samuel = \App\Models\Samuel::findOrFail($id);
+        $nom = $samuel->nom_complet;
+
+        $samuel->presences()->delete();
+        $samuel->delete();
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'samuel.delete',
+            'description' => 'Samuel supprimé : ' . $nom,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'Samuel supprimé avec succès.');
+    })->name('samuels.destroy');
 
     Route::get('/administrateurs', function () {
         $administrateurs = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->orderByDesc('created_at')->get();
@@ -197,7 +278,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/presences', function () {
-        $presences = \App\Models\Presence::with('user')->orderByDesc('date_repetition')->get();
+        $presences = \App\Models\Presence::with('samuel')->orderByDesc('date_repetition')->get();
         return view('samuel.admin.presences', compact('presences'));
     });
 

@@ -39,20 +39,12 @@
                 <form action="/nouveau-samuel" method="POST">
                     @csrf
                     <div class="form-group">
-                        <label for="name">Nom complet</label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}" required placeholder="Ex : Jean Dupont">
+                        <label for="nom">Nom</label>
+                        <input type="text" name="nom" id="nom" value="{{ old('nom') }}" required placeholder="Ex : TONOU">
                     </div>
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}" required placeholder="Ex : jean@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="telephone">Téléphone</label>
-                        <input type="text" name="telephone" id="telephone" value="{{ old('telephone') }}" placeholder="Ex : +243 000 000 000">
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Mot de passe</label>
-                        <input type="password" name="password" id="password" required placeholder="Mot de passe initial">
+                        <label for="prenoms">Prénoms</label>
+                        <input type="text" name="prenoms" id="prenoms" value="{{ old('prenoms') }}" required placeholder="Ex : Charbel">
                     </div>
                     <div style="display:flex; gap:10px; margin-top:25px;">
                         <button type="submit" class="btn btn-gold" style="padding:12px 28px; font-size:15px;">Ajouter le Samuel</button>
@@ -62,10 +54,7 @@
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="brand">Samuel App • Administration principale</div>
-            <div class="motto">Foi • Service • Engagement</div>
-        </footer>
+        @include('samuel.dashboards.partials.footer')
     </div>
 
 </body>

@@ -12,6 +12,14 @@
             @endauth
         </div>
         
+        @if ($errors->any())
+            <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
         <form action="{{ route('login') }}" method="POST" class="space-y-4">
             @csrf
             
@@ -25,14 +33,12 @@
                 <input type="password" name="password" id="password" required class="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 focus:outline-none focus:border-[#172554] transition-colors">
             </div>
             
-            <div>
-                <div class="flex items-center justify-between text-sm">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" name="remember" id="remember" class="rounded border-gray-300 w-4 h-4 focus:ring-2 focus:ring-[#172554]">
-                        Se souvenir de moi
-                    </label>
-                    <a href="#" class="text-[#6B7280] hover:text-gray-300 transition-colors">Mot de passe oublié ?</a>
-                </div>
+            <div class="flex flex-wrap items-center justify-between gap-y-2 text-sm">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" name="remember" id="remember" class="rounded border-gray-300 w-4 h-4 focus:ring-2 focus:ring-[#172554]">
+                    Se souvenir de moi
+                </label>
+                <a href="{{ route('password.request') }}" class="text-[#6B7280] hover:text-[#172554] transition-colors">Mot de passe oublié ?</a>
             </div>
             
             <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-[#D4A72C] to-[#F59E0B] px-6 py-3 text-lg font-medium text-[#172554] hover:opacity-90 transition-opacity">

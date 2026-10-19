@@ -25,6 +25,13 @@
             <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                 {{ $slot }}
             </div>
+
+            <!-- Pied de page -->
+            <footer class="mt-auto w-full text-center py-6 text-sm text-gray-500">
+                <div class="text-[#172554] font-bold">Samuel App</div>
+                <div class="text-[#D4A72C] text-xs tracking-[0.2em] mt-1">Foi &bull; Service &bull; Engagement</div>
+                <div class="mt-2">&copy; 2026 Samuel App - Tous droits réservés</div>
+            </footer>
         </div>
     </body>
 </html>

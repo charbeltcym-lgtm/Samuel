@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Presence extends Model
 {
     protected $fillable = [
-        'user_id',
+        'samuel_id',
         'date_repetition',
         'statut',
         'remarque',
@@ -20,8 +20,8 @@ class Presence extends Model
         'synchronise' => 'boolean',
     ];
 
-    public function user(): BelongsTo
+    public function samuel(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Samuel::class);
     }
 }

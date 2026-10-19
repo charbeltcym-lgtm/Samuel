@@ -21,6 +21,11 @@
             </div>
         </header>
         <div class="content">
+            @if (session('success'))
+                <div style="background:#dcfce7; color:#15803D; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px;">
+                    {{ session('success') }}
+                </div>
+            @endif
             <div class="panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                     <h3 style="margin:0;">Liste des Samuels ({{ $samuels->count() }})</h3>
@@ -30,14 +35,20 @@
                     <div class="empty-state"><div class="icon">👥</div><p>Aucun Samuel inscrit pour le moment</p></div>
                 @else
                     <table>
-                        <thead><tr><th>Nom</th><th>Email</th><th>Statut</th><th>Inscrit le</th></tr></thead>
+                        <thead><tr><th>Nom</th><th>Prénoms</th><th>Ajouté le</th><th>Actions</th></tr></thead>
                         <tbody>
                             @foreach ($samuels as $samuel)
                             <tr>
-                                <td><strong>{{ $samuel->name }}</strong></td>
-                                <td>{{ $samuel->email }}</td>
-                                <td><span class="badge badge-{{ $samuel->status === 'active' ? 'active' : ($samuel->status === 'pending' ? 'pending' : 'rejected') }}">{{ $samuel->status === 'active' ? 'Actif' : ($samuel->status === 'pending' ? 'En attente' : 'Désactivé') }}</span></td>
+                                <td><strong>{{ $samuel->nom }}</strong></td>
+                                <td>{{ $samuel->prenoms }}</td>
                                 <td>{{ $samuel->created_at->format('d/m/Y') }}</td>
+                                <td>
+                                    <form action="{{ route('samuels.destroy', $samuel->id) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $samuel->nom_complet }} et ses présences ?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-red" style="padding:5px 10px;">Supprimer</button>
+                                    </form>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -45,7 +56,7 @@
                 @endif
             </div>
         </div>
-        <footer class="footer"><div class="brand">Samuel App • Administration principale</div><div class="motto">Foi • Service • Engagement</div></footer>
+        @include('samuel.dashboards.partials.footer')
     </div>
 </body>
 </html>

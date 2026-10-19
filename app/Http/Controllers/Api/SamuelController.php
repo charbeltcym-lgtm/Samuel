@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\Notification;
 use App\Models\Presence;
+use App\Models\Samuel;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class SamuelController extends Controller
 {
@@ -39,25 +38,49 @@ class SamuelController extends Controller
         if (!isset($this->chapitres[$id])) {
             return response()->json(['message' => 'Chapitre introuvable'], 404);
         }
+
+        $chemin = resource_path("chapitres/{$id}.html");
+        $contenu = is_file($chemin) ? file_get_contents($chemin) : null;
+
         return response()->json([
             'numero' => (int) $id,
             'titre' => $this->chapitres[$id],
-            'contenu' => 'Le contenu de ce chapitre sera prochainement disponible.',
+            'contenu' => $contenu ?: 'Le contenu de ce chapitre sera prochainement disponible.',
         ]);
     }
 
     public function verifyCode(Request $request)
     {
         $data = $request->validate([
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'code' => 'required|string',
             'password' => 'nullable|string|min:8',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $user = User::where('activation_code', $data['code'])
+            ->where('status', 'pending')
+            ->first();
 
-        if (!$user || !$user->activation_code || !hash_equals($user->activation_code, $data['code'])) {
-            return response()->json(['message' => 'Email ou code d\'activation invalide'], 422);
+        if (!$user && !empty($data['email'])) {
+            $user = User::where('email', $data['email'])
+                ->where('activation_code', $data['code'])
+                ->first();
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'Code d\'activation invalide'], 422);
+        }
+
+        if (!empty($data['email'])) {
+            $dejaUtilise = User::where('email', $data['email'])
+                ->where('id', '!=', $user->id)
+                ->exists();
+
+            if ($dejaUtilise) {
+                return response()->json(['message' => 'Cet email est déjà utilisé'], 422);
+            }
+
+            $user->email = $data['email'];
         }
 
         if (!empty($data['password'])) {
@@ -81,7 +104,7 @@ class SamuelController extends Controller
 
     public function getPresences(Request $request)
     {
-        $query = Presence::with('user');
+        $query = Presence::with('samuel');
 
         if ($request->filled('date')) {
             $query->whereDate('date_repetition', $request->date);
@@ -93,7 +116,7 @@ class SamuelController extends Controller
     public function savePresence(Request $request)
     {
         $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'samuel_id' => 'required|exists:samuels,id',
             'date_repetition' => 'required|date',
             'statut' => 'required|in:present,absent,retard,permissionnaire',
             'remarque' => 'nullable|string',
@@ -105,7 +128,7 @@ class SamuelController extends Controller
             ], 422);
         }
 
-        $presence = Presence::where('user_id', $data['user_id'])
+        $presence = Presence::where('samuel_id', $data['samuel_id'])
             ->whereDate('date_repetition', $data['date_repetition'])
             ->first();
 
@@ -117,7 +140,7 @@ class SamuelController extends Controller
             ]);
         } else {
             $presence = Presence::create([
-                'user_id' => $data['user_id'],
+                'samuel_id' => $data['samuel_id'],
                 'date_repetition' => $data['date_repetition'],
                 'statut' => $data['statut'],
                 'remarque' => $data['remarque'] ?? null,
@@ -125,11 +148,11 @@ class SamuelController extends Controller
             ]);
         }
 
-        $samuel = User::find($data['user_id']);
+        $samuel = Samuel::find($data['samuel_id']);
 
         Notification::notifierAdmins(
             'Présence enregistrée (mobile)',
-            'Présence de ' . ($samuel->name ?? 'un Samuel') . ' : ' . $data['statut'] . ' le ' . $data['date_repetition'],
+            'Présence de ' . ($samuel->nom_complet ?? 'un Samuel') . ' : ' . $data['statut'] . ' le ' . $data['date_repetition'],
             'info',
             'mobile',
             ['presence_id' => $presence->id]
@@ -138,7 +161,7 @@ class SamuelController extends Controller
         Activity::create([
             'user_id' => $request->user()?->id,
             'action' => 'presence.mobile',
-            'description' => 'Présence enregistrée depuis le mobile pour ' . ($samuel->name ?? 'un Samuel'),
+            'description' => 'Présence enregistrée depuis le mobile pour ' . ($samuel->nom_complet ?? 'un Samuel'),
             'ip_address' => $request->ip(),
         ]);
 
@@ -175,7 +198,7 @@ class SamuelController extends Controller
         $derniereDate = $derniere ? \Illuminate\Support\Carbon::parse($derniere)->toDateString() : null;
 
         return response()->json([
-            'total_samuels' => User::where('role', 'user')->count(),
+            'total_samuels' => Samuel::count(),
             'total_administrateurs' => User::whereIn('role', ['admin', 'super_admin'])->count(),
             'inscriptions_en_attente' => User::where('status', 'pending')->count(),
             'presents' => Presence::whereDate('date_repetition', $derniereDate)->where('statut', 'present')->count(),
@@ -187,7 +210,9 @@ class SamuelController extends Controller
 
     public function getSamuels()
     {
-        return response()->json(User::where('role', 'user')->get());
+        return response()->json(
+            Samuel::orderBy('nom')->orderBy('prenoms')->get()
+        );
     }
 
     public function storeSamuel(Request $request)
@@ -195,48 +220,65 @@ class SamuelController extends Controller
         $data = $request->validate([
             'nom' => 'required|string|max:255',
             'prenoms' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
         ]);
 
-        $code = strtoupper(Str::random(8));
-
-        $samuel = User::create([
-            'name' => trim($data['nom'] . ' ' . $data['prenoms']),
-            'email' => $data['email'],
-            'password' => Str::random(16),
-            'role' => 'user',
-            'status' => 'pending',
-            'activation_code' => $code,
+        $samuel = Samuel::create([
+            'nom' => trim($data['nom']),
+            'prenoms' => trim($data['prenoms']),
         ]);
 
         Notification::notifierAdmins(
             'Nouveau Samuel',
-            $samuel->name . ' a été ajouté depuis l\'application mobile.',
+            $samuel->nom_complet . ' a été ajouté depuis l\'application mobile.',
             'success',
             'mobile',
-            ['user_id' => $samuel->id]
+            ['samuel_id' => $samuel->id]
         );
 
         return response()->json([
-            'message' => 'Samuel ajouté. Transmettez-lui le code d\'activation.',
+            'message' => 'Samuel ajouté avec succès.',
             'samuel' => $samuel,
-            'code' => $code,
         ], 201);
     }
 
     public function updateSamuel(Request $request, $id)
     {
-        $samuel = User::findOrFail($id);
+        $samuel = Samuel::findOrFail($id);
 
         $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
-            'status' => 'sometimes|in:pending,active,disabled',
+            'nom' => 'sometimes|string|max:255',
+            'prenoms' => 'sometimes|nullable|string|max:255',
         ]);
 
         $samuel->update($data);
 
         return response()->json(['message' => 'Samuel mis à jour', 'samuel' => $samuel]);
+    }
+
+    public function destroySamuel($id)
+    {
+        $samuel = Samuel::findOrFail($id);
+        $nom = $samuel->nom_complet;
+
+        $samuel->presences()->delete();
+        $samuel->delete();
+
+        Notification::notifierAdmins(
+            'Samuel supprimé',
+            $nom . ' a été retiré de la liste des Samuels.',
+            'warning',
+            'mobile',
+            []
+        );
+
+        Activity::create([
+            'user_id' => request()->user()?->id,
+            'action' => 'samuel.delete',
+            'description' => 'Samuel supprimé depuis le mobile : ' . $nom,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return response()->json(['message' => 'Samuel supprimé avec succès.']);
     }
 
     public function getAllSamuels()

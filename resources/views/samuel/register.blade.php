@@ -14,12 +14,12 @@
 
     <!-- En-tête -->
     <header style="background: #172554; padding: 15px 0;">
-        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img src="{{ asset('images/logo.png') }}" alt="Samuel App" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover;">
                 <span style="color: white; font-size: 20px; font-weight: bold;">Samuel App</span>
             </div>
-            <nav style="display: flex; gap: 20px; align-items: center;">
+            <nav style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
                 <a href="/" style="color: #ccc; text-decoration: none;">Accueil</a>
                 <a href="/a-propos" style="color: #ccc; text-decoration: none;">À propos</a>
                 <a href="/chapitres" style="color: #ccc; text-decoration: none;">Chapitres</a>

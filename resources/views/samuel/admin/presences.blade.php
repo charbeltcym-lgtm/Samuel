@@ -34,7 +34,7 @@
                         <tbody>
                             @foreach ($presences as $presence)
                             <tr>
-                                <td><strong>{{ $presence->user->name ?? '—' }}</strong></td>
+                                <td><strong>{{ $presence->samuel->nom_complet ?? '—' }}</strong></td>
                                 <td>{{ \Carbon\Carbon::parse($presence->date_repetition)->format('d/m/Y') }}</td>
                                 <td>
                                     @if ($presence->statut === 'present') <span class="badge badge-present">Présent</span>
@@ -49,7 +49,7 @@
                 @endif
             </div>
         </div>
-        <footer class="footer"><div class="brand">Samuel App • Administration principale</div><div class="motto">Foi • Service • Engagement</div></footer>
+        @include('samuel.dashboards.partials.footer')
     </div>
 </body>
 </html>

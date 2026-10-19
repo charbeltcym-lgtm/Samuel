@@ -41,7 +41,7 @@
                 </form>
             </div>
         </div>
-        <footer class="footer"><div class="brand">Samuel App • Administration principale</div><div class="motto">Foi • Service • Engagement</div></footer>
+        @include('samuel.dashboards.partials.footer')
     </div>
 </body>
 </html>
