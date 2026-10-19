@@ -185,6 +185,7 @@ class SamuelController extends Controller
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('photos', 'public');
+            $data['photo_data'] = User::encodePhoto($request->file('photo'));
         }
 
         $user->update($data);

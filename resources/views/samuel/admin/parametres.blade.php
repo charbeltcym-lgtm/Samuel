@@ -44,8 +44,8 @@
                 <h3>📷 Photo de profil</h3>
                 <div style="display:flex; align-items:center; gap:30px; flex-wrap:wrap;">
                     <div style="text-align:center;">
-                        @if (auth()->user()->photo)
-                            <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="Photo de profil" style="width:120px; height:120px; border-radius:50%; object-fit:cover; border:4px solid #D4A72C;">
+                        @if (auth()->user()->photo_url)
+                            <img src="{{ auth()->user()->photo_url }}" alt="Photo de profil" style="width:120px; height:120px; border-radius:50%; object-fit:cover; border:4px solid #D4A72C;">
                         @else
                             <div style="width:120px; height:120px; border-radius:50%; background:#D4A72C; color:#172554; display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:bold; border:4px solid #e2e8f0;">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

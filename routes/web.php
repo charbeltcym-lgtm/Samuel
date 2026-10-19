@@ -21,6 +21,20 @@ Route::get('/à-propos', function () {
     return view('samuel.about');
 });
 
+Route::get('/photo/{user}', function (\App\Models\User $user) {
+    if ($user->photo_data && preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.*)$#s', $user->photo_data, $m)) {
+        return response(base64_decode($m[2]), 200)
+            ->header('Content-Type', $m[1])
+            ->header('Cache-Control', 'public, max-age=604800');
+    }
+
+    if ($user->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->photo)) {
+        return \Illuminate\Support\Facades\Storage::disk('public')->response($user->photo);
+    }
+
+    abort(404);
+})->name('photo.show');
+
 Route::get('/chapitres', function () {
     $chapitres = [
         1 => 'Histoire du Samuel et prière du servant',
@@ -360,7 +374,10 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         }
 
         $path = request()->file('photo')->store('photos', 'public');
-        $user->update(['photo' => $path]);
+        $user->update([
+            'photo' => $path,
+            'photo_data' => \App\Models\User::encodePhoto(request()->file('photo')),
+        ]);
 
         \App\Models\Activity::create([
             'user_id' => $user->id,
