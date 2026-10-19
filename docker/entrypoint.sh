@@ -46,5 +46,8 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
+# Lien public/storage -> storage/app/public (fichiers uploades : photos de profil).
+php artisan storage:link || true
+
 # Demarrage d'Apache (processus principal).
 exec apache2-foreground
