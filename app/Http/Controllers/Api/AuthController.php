@@ -28,7 +28,10 @@ class AuthController extends Controller
         }
 
         if ($user->status === 'pending') {
-            return response()->json(['message' => 'Compte en attente de validation'], 403);
+            return response()->json([
+                'message' => 'Compte en attente d\'activation. Utilisez « Première connexion » avec le code reçu par email.',
+                'requires_activation' => true,
+            ], 403);
         }
 
         if ($user->status === 'disabled') {
