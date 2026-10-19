@@ -9,6 +9,32 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// ROUTE TEMPORAIRE : reinitialisation complete de la base (a retirer ensuite).
+Route::get('/__db-reset/{token}', function (string $token) {
+    abort_unless($token === 'SamuelReset2026xK9p', 404);
+
+    $log = [];
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        $log['migrate:fresh'] = trim(\Illuminate\Support\Facades\Artisan::output());
+    } catch (\Throwable $e) {
+        $log['migrate:fresh'] = 'ERREUR: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuperAdminSeeder', '--force' => true]);
+        $log['seed'] = trim(\Illuminate\Support\Facades\Artisan::output());
+    } catch (\Throwable $e) {
+        $log['seed'] = 'ERREUR: ' . $e->getMessage();
+    }
+
+    $log['utilisateurs'] = \App\Models\User::count();
+    $log['super_admin'] = optional(\App\Models\User::where('role', 'super_admin')->first())->email ?? 'AUCUN';
+
+    return response('<pre>' . e(print_r($log, true)) . '</pre>');
+});
+
 Route::get('/', function () {
     return view('samuel.home');
 });
