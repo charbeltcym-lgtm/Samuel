@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# Logs applicatifs dans un fichier (lisible via storage/logs/laravel.log).
+export LOG_CHANNEL=single
+
 # Render fournit le port via la variable PORT (defaut 80 en local).
 PORT="${PORT:-80}"
 
