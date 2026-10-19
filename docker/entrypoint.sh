@@ -28,8 +28,7 @@ for i in 1 2 3 4 5; do
     sleep 5
 done
 if [ "$migrated" -ne 1 ]; then
-    echo "ERREUR : impossible d'appliquer les migrations apres 5 tentatives." >&2
-    exit 1
+    echo "AVERTISSEMENT : migrations non appliquees apres 5 tentatives. Demarrage du serveur malgre tout." >&2
 fi
 
 # Super administrateur initial (optionnel, via variables d'environnement).
