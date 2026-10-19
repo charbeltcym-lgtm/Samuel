@@ -19,13 +19,27 @@ Route::get('/__db-reset/{token}', function (string $token) {
             $cb();
         } catch (\Throwable $e) {
             $log[$label . ' ERREUR'] = get_class($e) . ': ' . $e->getMessage();
+            try {
+                $out = trim(\Illuminate\Support\Facades\Artisan::output());
+                if ($out !== '') {
+                    $log[$label . ' SORTIE'] = $out;
+                }
+            } catch (\Throwable $e2) {
+            }
         }
     };
 
     $log['php'] = PHP_VERSION;
     $log['db_driver'] = config('database.default');
-    $log['db_host'] = config('database.connections.' . config('database.default') . '.host');
-    $log['db_database'] = config('database.connections.' . config('database.default') . '.database');
+    $host = config('database.connections.pgsql.host');
+    $log['host_initial'] = $host;
+
+    if (request('direct')) {
+        $direct = str_replace('-pooler', '', (string) $host);
+        config(['database.connections.pgsql.host' => $direct]);
+        \Illuminate\Support\Facades\DB::purge('pgsql');
+        $log['host_utilise'] = $direct;
+    }
 
     $run('db_connect', function () use (&$log) {
         \Illuminate\Support\Facades\DB::select('select 1');
@@ -42,10 +56,17 @@ Route::get('/__db-reset/{token}', function (string $token) {
         $log['users_columns'] = implode(', ', array_map(fn ($r) => $r->column_name, $rows));
     });
 
-    $run('migrate:fresh', function () use (&$log) {
-        $code = \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
-        $log['migrate:fresh'] = "code=$code\n" . trim(\Illuminate\Support\Facades\Artisan::output());
-    });
+    if (request('mode') === 'migrate') {
+        $run('migrate', function () use (&$log) {
+            $code = \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $log['migrate'] = "code=$code\n" . trim(\Illuminate\Support\Facades\Artisan::output());
+        });
+    } else {
+        $run('migrate:fresh', function () use (&$log) {
+            $code = \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+            $log['migrate:fresh'] = "code=$code\n" . trim(\Illuminate\Support\Facades\Artisan::output());
+        });
+    }
 
     $run('seed', function () use (&$log) {
         $code = \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuperAdminSeeder', '--force' => true]);
