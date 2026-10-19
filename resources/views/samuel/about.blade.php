@@ -96,13 +96,33 @@
 
     <!-- Contact / appel à l'action -->
     <section style="background: #172554; color: white; text-align: center; padding: 60px 20px;">
-        <h2 style="font-size: 26px; margin-bottom: 10px;">Une question ?</h2>
-        <p style="color: #cbd5e1; max-width: 520px; margin: 0 auto 26px; line-height: 1.7;">
-            Pour toute demande d'information, veuillez contacter l'administrateur de la plateforme.
+        <h2 style="font-size: 26px; margin-bottom: 10px;">Contactez l'administrateur</h2>
+        <p style="color: #cbd5e1; max-width: 560px; margin: 0 auto 30px; line-height: 1.7;">
+            Une question, une demande d'information ? Nous vous répondrons avec plaisir.
         </p>
-        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-            <a href="/inscription" style="background: #D4A72C; color: #172554; padding: 12px 30px; border-radius: 10px; font-weight: bold;">Créer mon compte</a>
-            <a href="/chapitres" style="background: rgba(255,255,255,0.12); color: white; padding: 12px 30px; border-radius: 10px; font-weight: bold;">Voir les chapitres</a>
+
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="https://wa.me/2250150034446" target="_blank" rel="noopener"
+               style="display: flex; align-items: center; gap: 14px; background: #25D366; color: #06331b; padding: 14px 24px; border-radius: 12px; font-weight: bold; text-align: left;">
+                <span style="font-size: 22px;">💬</span>
+                <span style="line-height: 1.25;">
+                    <span style="display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: .75;">WhatsApp</span>
+                    0150034446
+                </span>
+            </a>
+
+            <a href="mailto:charbeltcym@gmail.com"
+               style="display: flex; align-items: center; gap: 14px; background: #D4A72C; color: #172554; padding: 14px 24px; border-radius: 12px; font-weight: bold; text-align: left;">
+                <span style="font-size: 22px;">✉️</span>
+                <span style="line-height: 1.25;">
+                    <span style="display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: .75;">Email</span>
+                    charbeltcym@gmail.com
+                </span>
+            </a>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a href="/inscription" style="color: #D4A72C; font-weight: bold;">Créer mon compte →</a>
         </div>
     </section>
 
