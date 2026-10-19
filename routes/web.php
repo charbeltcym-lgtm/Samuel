@@ -14,23 +14,51 @@ Route::get('/__db-reset/{token}', function (string $token) {
     abort_unless($token === 'SamuelReset2026xK9p', 404);
 
     $log = [];
+    $run = function (string $label, callable $cb) use (&$log) {
+        try {
+            $cb();
+        } catch (\Throwable $e) {
+            $log[$label . ' ERREUR'] = get_class($e) . ': ' . $e->getMessage();
+        }
+    };
 
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
-        $log['migrate:fresh'] = trim(\Illuminate\Support\Facades\Artisan::output());
-    } catch (\Throwable $e) {
-        $log['migrate:fresh'] = 'ERREUR: ' . $e->getMessage();
-    }
+    $log['php'] = PHP_VERSION;
+    $log['db_driver'] = config('database.default');
+    $log['db_host'] = config('database.connections.' . config('database.default') . '.host');
+    $log['db_database'] = config('database.connections.' . config('database.default') . '.database');
 
-    try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuperAdminSeeder', '--force' => true]);
-        $log['seed'] = trim(\Illuminate\Support\Facades\Artisan::output());
-    } catch (\Throwable $e) {
-        $log['seed'] = 'ERREUR: ' . $e->getMessage();
-    }
+    $run('db_connect', function () use (&$log) {
+        \Illuminate\Support\Facades\DB::select('select 1');
+        $log['db_connect'] = 'OK';
+    });
 
-    $log['utilisateurs'] = \App\Models\User::count();
-    $log['super_admin'] = optional(\App\Models\User::where('role', 'super_admin')->first())->email ?? 'AUCUN';
+    $run('tables', function () use (&$log) {
+        $rows = \Illuminate\Support\Facades\DB::select("select table_name from information_schema.tables where table_schema='public'");
+        $log['tables'] = implode(', ', array_map(fn ($r) => $r->table_name, $rows));
+    });
+
+    $run('users_columns', function () use (&$log) {
+        $rows = \Illuminate\Support\Facades\DB::select("select column_name from information_schema.columns where table_name='users'");
+        $log['users_columns'] = implode(', ', array_map(fn ($r) => $r->column_name, $rows));
+    });
+
+    $run('migrate:fresh', function () use (&$log) {
+        $code = \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        $log['migrate:fresh'] = "code=$code\n" . trim(\Illuminate\Support\Facades\Artisan::output());
+    });
+
+    $run('seed', function () use (&$log) {
+        $code = \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuperAdminSeeder', '--force' => true]);
+        $log['seed'] = "code=$code\n" . trim(\Illuminate\Support\Facades\Artisan::output());
+    });
+
+    $run('resultat', function () use (&$log) {
+        $log['utilisateurs'] = \App\Models\User::count();
+        $log['super_admin'] = optional(\App\Models\User::where('role', 'super_admin')->first())->email ?? 'AUCUN';
+    });
+
+    $logFile = storage_path('logs/laravel.log');
+    $log['log_tail'] = is_file($logFile) ? substr(file_get_contents($logFile), -5000) : '(aucun log)';
 
     return response('<pre>' . e(print_r($log, true)) . '</pre>');
 });
