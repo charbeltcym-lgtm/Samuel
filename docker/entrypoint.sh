@@ -16,19 +16,25 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-# Base de donnees (Neon / Postgres) : appliquer les migrations.
-# Neon peut mettre quelques secondes a se reveiller : on retente.
-migrated=0
-for i in 1 2 3 4 5; do
-    if php artisan migrate --force; then
-        migrated=1
-        break
+# Base de donnees (Neon / Postgres).
+# Si SAMUEL_FRESH_DB=true : reinitialisation complete du schema (migrate:fresh).
+if [ "${SAMUEL_FRESH_DB:-}" = "true" ]; then
+    echo "SAMUEL_FRESH_DB=true : reinitialisation complete de la base (migrate:fresh --force)."
+    php artisan migrate:fresh --force || true
+else
+    # Neon peut mettre quelques secondes a se reveiller : on retente.
+    migrated=0
+    for i in 1 2 3 4 5; do
+        if php artisan migrate --force; then
+            migrated=1
+            break
+        fi
+        echo "Migration echouee (tentative $i/5), nouvelle tentative dans 5s..."
+        sleep 5
+    done
+    if [ "$migrated" -ne 1 ]; then
+        echo "AVERTISSEMENT : migrations non appliquees apres 5 tentatives. Demarrage du serveur malgre tout." >&2
     fi
-    echo "Migration echouee (tentative $i/5), nouvelle tentative dans 5s..."
-    sleep 5
-done
-if [ "$migrated" -ne 1 ]; then
-    echo "AVERTISSEMENT : migrations non appliquees apres 5 tentatives. Demarrage du serveur malgre tout." >&2
 fi
 
 # Super administrateur initial (optionnel, via variables d'environnement).
