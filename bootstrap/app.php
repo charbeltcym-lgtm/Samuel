@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Derriere le proxy de Render : faire confiance aux en-tetes X-Forwarded-*
+        // pour detecter le HTTPS et generer les bonnes URLs.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'api.token' => ApiTokenAuth::class,
             'api.role' => ApiRole::class,
