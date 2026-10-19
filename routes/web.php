@@ -17,6 +17,10 @@ Route::get('/samuel-app', function () {
     return view('samuel.home');
 });
 
+Route::get('/a-propos', function () {
+    return view('samuel.about');
+})->name('a-propos');
+
 Route::get('/à-propos', function () {
     return view('samuel.about');
 });
