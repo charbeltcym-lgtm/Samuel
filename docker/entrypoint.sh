@@ -5,8 +5,9 @@ set -e
 export LOG_CHANNEL=single
 
 # Neon : le host "pooler" casse les migrations (DDL). On force le host direct.
-if [ -n "${DB_URL:-}" ]; then export DB_URL="${DB_URL/-pooler/}"; fi
-if [ -n "${DB_HOST:-}" ]; then export DB_HOST="${DB_HOST/-pooler/}"; fi
+# (POSIX sh : pas de substitution bash, on utilise sed.)
+if [ -n "${DB_URL:-}" ]; then DB_URL=$(printf '%s' "$DB_URL" | sed 's/-pooler//g'); export DB_URL; fi
+if [ -n "${DB_HOST:-}" ]; then DB_HOST=$(printf '%s' "$DB_HOST" | sed 's/-pooler//g'); export DB_HOST; fi
 
 # Render fournit le port via la variable PORT (defaut 80 en local).
 PORT="${PORT:-80}"
