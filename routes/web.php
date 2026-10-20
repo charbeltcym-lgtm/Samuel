@@ -260,10 +260,10 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             'ip_address' => request()->ip(),
         ]);
 
-        $message = 'Inscription de ' . $user->name . ' validée comme ' . $roleLabel
-            . '. Code : ' . $user->activation_code
-            . ' — Mot de passe : ' . $motDePasse
-            . ($envoye ? ' (identifiants envoyés par email à ' . $user->email . ')' : ' (email non envoyé, à transmettre manuellement)');
+        $message = 'Inscription de ' . $user->name . ' validée comme ' . $roleLabel . '. '
+            . ($envoye
+                ? 'Ses identifiants (code d\'activation + mot de passe) ont été envoyés par email à ' . $user->email . '.'
+                : 'L\'email n\'a pas pu être envoyé — réessayez la validation pour le renvoyer.');
 
         return back()->with('success', $message);
     })->name('inscriptions.valider');
