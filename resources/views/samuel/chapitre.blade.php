@@ -87,7 +87,7 @@
                 <div style="background: #fffbeb; border: 1px dashed #D4A72C; border-radius: 12px; padding: 22px; text-align: center;">
                     <p style="color: #92400E; font-size: 15px; line-height: 1.7; margin: 0;">
                         Le contenu détaillé de ce chapitre est réservé à l'administration.
-                        Activez votre compte puis connectez-vous pour y accéder.
+                        Activez votre compte puis connectez-vous pour y accéder grâce à l'application mobile.
                     </p>
                 </div>
             @else
