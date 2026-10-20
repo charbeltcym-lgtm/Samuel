@@ -15,13 +15,14 @@ class ActivationCodeMail extends Mailable
     public function __construct(
         public string $nom,
         public string $code,
+        public string $motDePasse = '',
     ) {
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bienvenue chez Samuel App — Voici votre code d\'activation',
+            subject: 'Bienvenue chez Samuel App — Voici vos identifiants d\'accès',
         );
     }
 

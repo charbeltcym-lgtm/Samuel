@@ -42,12 +42,25 @@
                                 </tr>
                             </table>
 
+                            @if (!empty($motDePasse))
+                            <!-- Mot de passe -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff; border:1px dashed #172554; border-radius:14px; margin-top:14px;">
+                                <tr>
+                                    <td style="padding:22px; text-align:center;">
+                                        <div style="color:#6B7280; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Voici ton mot de passe</div>
+                                        <div style="color:#172554; font-size:30px; font-weight:bold; letter-spacing:6px; font-family:'Courier New', monospace;">{{ $motDePasse }}</div>
+                                        <div style="color:#6B7280; font-size:13px; margin-top:10px;">Conserve-le précieusement : c'est lui qui te donnera accès à l'application.</div>
+                                    </td>
+                                </tr>
+                            </table>
+                            @endif
+
                             <p style="color:#172554; font-size:15px; font-weight:bold; margin:28px 0 12px;">Pour activer ton compte :</p>
                             <ol style="color:#374151; font-size:15px; line-height:1.9; margin:0 0 22px; padding-left:20px;">
                                 <li>Ouvre l'application mobile <strong>Samuel</strong>.</li>
                                 <li>Sur l'écran de connexion, appuie sur <strong>« Première connexion »</strong>.</li>
-                                <li>Saisis ton <strong>code d'activation</strong>, ton <strong>email</strong> et choisis un <strong>mot de passe</strong>.</li>
-                                <li>C'est fait ! Tu pourras accéder à tes chapitres de formation.</li>
+                                <li>Saisis ton <strong>code d'activation</strong>, ton <strong>email</strong> et le <strong>mot de passe</strong> ci-dessus.</li>
+                                <li>C'est fait ! Tu pourras ensuite te connecter normalement et accéder à tes chapitres.</li>
                             </ol>
 
                             <p style="color:#9CA3AF; font-size:13px; line-height:1.6; margin:0 0 8px; font-style:italic;">
