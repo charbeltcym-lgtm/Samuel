@@ -79,9 +79,16 @@
                 <span style="color: #172554; font-weight: bold; font-size: 22px;">{{ $numero }}</span>
             </div>
             <h1 style="color: #172554; font-size: 28px; margin-bottom: 20px;">{{ $titre }}</h1>
-            @if (!empty($contenu))
+            @if (!empty($contenu) && auth()->check() && auth()->user()->role === 'super_admin')
                 <div class="chapitre-contenu" style="color: #2D3748; font-size: 16px; line-height: 1.9; word-wrap: break-word;">
                     {!! $contenu !!}
+                </div>
+            @elseif (!empty($contenu))
+                <div style="background: #fffbeb; border: 1px dashed #D4A72C; border-radius: 12px; padding: 22px; text-align: center;">
+                    <p style="color: #92400E; font-size: 15px; line-height: 1.7; margin: 0;">
+                        Le contenu détaillé de ce chapitre est réservé à l'administration.
+                        Activez votre compte puis connectez-vous pour y accéder.
+                    </p>
                 </div>
             @else
                 <p style="color: #4A5568; font-size: 16px; line-height: 1.8;">
