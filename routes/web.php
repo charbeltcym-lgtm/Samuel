@@ -111,7 +111,7 @@ Route::post('/inscription', function () {
         ['user_id' => $user->id]
     );
 
-    return back()->with('success', 'Votre inscription a bien été enregistrée. Un administrateur va lui attribuer un rôle, puis vous recevrez votre code d\'activation et votre mot de passe par email.');
+    return back()->with('success', 'Votre inscription a bien été enregistrée. Un administrateur va lui attribuer un rôle, puis vous recevrez votre code d\'activation par email.');
 })->name('registration.store');
 
 Route::get('/activation/{code}', function ($code) {
@@ -231,10 +231,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
 
         $user = \App\Models\User::where('status', 'pending')->findOrFail($id);
 
-        $motDePasse = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(4)) . random_int(100000, 999999);
-
         $user->role = $role;
-        $user->password = $motDePasse;
 
         if (!$user->activation_code) {
             $user->activation_code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -245,7 +242,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $envoye = false;
         try {
             \Illuminate\Support\Facades\Mail::to($user->email)
-                ->send(new \App\Mail\ActivationCodeMail($user->name, $user->activation_code, $motDePasse));
+                ->send(new \App\Mail\ActivationCodeMail($user->name, $user->activation_code));
             $envoye = true;
         } catch (\Throwable $e) {
             $envoye = false;
@@ -262,7 +259,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
 
         $message = 'Inscription de ' . $user->name . ' validée comme ' . $roleLabel . '. '
             . ($envoye
-                ? 'Ses identifiants (code d\'activation + mot de passe) ont été envoyés par email à ' . $user->email . '.'
+                ? 'Le code d\'activation a été envoyé par email à ' . $user->email . '.'
                 : 'L\'email n\'a pas pu être envoyé — réessayez la validation pour le renvoyer.');
 
         return back()->with('success', $message);

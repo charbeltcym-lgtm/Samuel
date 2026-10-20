@@ -14,7 +14,7 @@
                     <!-- En-tête -->
                     <tr>
                         <td style="background:#172554; padding:30px 24px; text-align:center;">
-                            <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Samuel App" width="110" style="width:110px; height:110px; border-radius:50%; border:3px solid #D4A72C; object-fit:cover; display:block; margin:0 auto 14px;">
+                            <img src="{{ asset('images/logo.png') }}" alt="Samuel App" width="110" style="width:110px; height:110px; border-radius:50%; border:3px solid #D4A72C; object-fit:cover; display:block; margin:0 auto 14px; background:#ffffff;">
                             <div style="color:#ffffff; font-size:24px; font-weight:bold; letter-spacing:3px;">SAMUEL APP</div>
                             <div style="color:#D4A72C; font-size:12px; letter-spacing:2px; margin-top:6px;">Foi &nbsp;•&nbsp; Service &nbsp;•&nbsp; Engagement</div>
                         </td>
@@ -42,24 +42,11 @@
                                 </tr>
                             </table>
 
-                            @if (!empty($motDePasse))
-                            <!-- Mot de passe -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff; border:1px dashed #172554; border-radius:14px; margin-top:14px;">
-                                <tr>
-                                    <td style="padding:22px; text-align:center;">
-                                        <div style="color:#6B7280; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Voici ton mot de passe</div>
-                                        <div style="color:#172554; font-size:30px; font-weight:bold; letter-spacing:6px; font-family:'Courier New', monospace;">{{ $motDePasse }}</div>
-                                        <div style="color:#6B7280; font-size:13px; margin-top:10px;">Conserve-le précieusement : c'est lui qui te donnera accès à l'application.</div>
-                                    </td>
-                                </tr>
-                            </table>
-                            @endif
-
                             <p style="color:#172554; font-size:15px; font-weight:bold; margin:28px 0 12px;">Pour activer ton compte :</p>
                             <ol style="color:#374151; font-size:15px; line-height:1.9; margin:0 0 22px; padding-left:20px;">
                                 <li>Ouvre l'application mobile <strong>Samuel</strong>.</li>
                                 <li>Sur l'écran de connexion, appuie sur <strong>« Première connexion »</strong>.</li>
-                                <li>Saisis ton <strong>code d'activation</strong>, ton <strong>email</strong> et le <strong>mot de passe</strong> ci-dessus.</li>
+                                <li>Saisis ton <strong>code d'activation</strong>, ton <strong>email</strong> et choisis ton <strong>mot de passe</strong>.</li>
                                 <li>C'est fait ! Tu pourras ensuite te connecter normalement et accéder à tes chapitres.</li>
                             </ol>
 

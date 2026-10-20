@@ -82,7 +82,7 @@ class AuthController extends Controller
         );
 
         return response()->json([
-            'message' => 'Inscription réussie. Votre compte sera validé par l\'administrateur principal : vous recevrez votre code d\'activation et votre mot de passe par email.',
+            'message' => 'Inscription réussie. Votre compte sera validé par l\'administrateur principal : vous recevrez votre code d\'activation par email.',
             'user' => $user,
         ], 201);
     }
