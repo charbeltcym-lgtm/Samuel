@@ -43,11 +43,14 @@
                                 <td>{{ $samuel->prenoms }}</td>
                                 <td>{{ $samuel->created_at->format('d/m/Y') }}</td>
                                 <td>
-                                    <form action="{{ route('samuels.destroy', $samuel->id) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $samuel->nom_complet }} et ses présences ?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-red" style="padding:5px 10px;">Supprimer</button>
-                                    </form>
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <a href="{{ route('samuels.edit', $samuel->id) }}" class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                        <form action="{{ route('samuels.destroy', $samuel->id) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $samuel->nom_complet }} et ses présences ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-red" style="padding:5px 10px;">Supprimer</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach

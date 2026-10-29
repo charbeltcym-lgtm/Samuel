@@ -284,6 +284,40 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         return view('samuel.admin.samuels', compact('samuels'));
     });
 
+    Route::get('/samuels/{id}/modifier', function ($id) {
+        $samuel = \App\Models\Samuel::findOrFail($id);
+
+        return view('samuel.admin.modifier-samuel', compact('samuel'));
+    })->name('samuels.edit');
+
+    Route::put('/samuels/{id}', function ($id) {
+        $samuel = \App\Models\Samuel::findOrFail($id);
+
+        $data = request()->validate([
+            'nom' => 'required|string|max:255',
+            'prenoms' => 'required|string|max:255',
+        ], [
+            'nom.required' => 'Le nom est obligatoire.',
+            'prenoms.required' => 'Les prénoms sont obligatoires.',
+        ]);
+
+        $avant = $samuel->nom_complet;
+
+        $samuel->update([
+            'nom' => trim($data['nom']),
+            'prenoms' => trim($data['prenoms']),
+        ]);
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'samuel.update',
+            'description' => 'Samuel modifié : ' . $avant . ' → ' . $samuel->nom_complet,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect('/samuels')->with('success', 'Samuel modifié avec succès.');
+    })->name('samuels.update');
+
     Route::delete('/samuels/{id}', function ($id) {
         $samuel = \App\Models\Samuel::findOrFail($id);
         $nom = $samuel->nom_complet;
@@ -307,8 +341,18 @@ Route::middleware(['auth', 'web.super'])->group(function () {
     });
 
     Route::get('/presences', function () {
-        $presences = \App\Models\Presence::with('samuel')->orderByDesc('date_repetition')->get();
-        return view('samuel.admin.presences', compact('presences'));
+        // Une ligne par samedi, avec le récapitulatif des statuts.
+        $dates = \App\Models\Presence::select('date_repetition')
+            ->selectRaw('count(*) as total')
+            ->selectRaw("sum(case when statut = 'present' then 1 else 0 end) as presents")
+            ->selectRaw("sum(case when statut = 'absent' then 1 else 0 end) as absents")
+            ->selectRaw("sum(case when statut = 'retard' then 1 else 0 end) as retards")
+            ->selectRaw("sum(case when statut = 'permissionnaire' then 1 else 0 end) as permissions")
+            ->groupBy('date_repetition')
+            ->orderByDesc('date_repetition')
+            ->get();
+
+        return view('samuel.admin.presences', compact('dates'));
     });
 
     Route::get('/historique', function () {
@@ -396,24 +440,100 @@ Route::middleware(['auth', 'web.super'])->group(function () {
     });
 
     Route::get('/nouvelle-seance', function () {
-        return view('samuel.admin.nouvelle-seance');
+        try {
+            $date = request('date')
+                ? \Carbon\Carbon::parse(request('date'))
+                : \Carbon\Carbon::now();
+        } catch (\Throwable $e) {
+            $date = \Carbon\Carbon::now();
+        }
+
+        // La répétition a toujours lieu le samedi : on ramène la date au samedi.
+        if ($date->dayOfWeek !== \Carbon\Carbon::SATURDAY) {
+            $date = $date->copy()->next(\Carbon\Carbon::SATURDAY);
+        }
+
+        $dateIso = $date->toDateString();
+
+        $samuels = \App\Models\Samuel::orderBy('nom')->orderBy('prenoms')->get();
+        $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
+            ->get()
+            ->keyBy('samuel_id');
+
+        return view('samuel.admin.nouvelle-seance', compact('dateIso', 'samuels', 'presences'));
     });
 
     Route::post('/nouvelle-seance', function () {
-        request()->validate([
+        $data = request()->validate([
             'date_repetition' => 'required|date',
-            'remarque' => 'nullable|string|max:500',
+            'statuts' => 'nullable|array',
+            'statuts.*' => 'nullable|in:present,absent,retard,permissionnaire',
+        ], [
+            'date_repetition.required' => 'Veuillez choisir une date.',
+            'date_repetition.date' => 'La date choisie est invalide.',
         ]);
+
+        $carbon = \Carbon\Carbon::parse($data['date_repetition']);
+
+        if ($carbon->dayOfWeek !== \Carbon\Carbon::SATURDAY) {
+            return back()
+                ->withErrors(['date_repetition' => 'La présence ne peut être enregistrée que le samedi.'])
+                ->withInput();
+        }
+
+        $dateIso = $carbon->toDateString();
+        $statuts = array_filter($data['statuts'] ?? [], fn ($v) => $v !== null && $v !== '');
+
+        if (empty($statuts)) {
+            return back()
+                ->withErrors(['statuts' => 'Aucun statut n\'a été sélectionné.'])
+                ->withInput();
+        }
+
+        $enregistres = 0;
+
+        foreach ($statuts as $samuelId => $statut) {
+            $samuel = \App\Models\Samuel::find($samuelId);
+            if (! $samuel) {
+                continue;
+            }
+
+            // On cherche par jour (whereDate) car la colonne est un datetime :
+            // comparer directement '2026-10-31' ne matcherait pas '2026-10-31 00:00:00'
+            // et provoquerait une violation de la contrainte d'unicité.
+            $presence = \App\Models\Presence::where('samuel_id', $samuel->id)
+                ->whereDate('date_repetition', $dateIso)
+                ->first();
+
+            if ($presence) {
+                $presence->update([
+                    'statut' => $statut,
+                    'synchronise' => true,
+                ]);
+            } else {
+                \App\Models\Presence::create([
+                    'samuel_id' => $samuel->id,
+                    'date_repetition' => $dateIso,
+                    'statut' => $statut,
+                    'synchronise' => true,
+                ]);
+            }
+
+            $enregistres++;
+        }
 
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
-            'action' => 'seance.create',
-            'description' => 'Nouvelle séance créée pour le ' . \Carbon\Carbon::parse(request('date_repetition'))->format('d/m/Y'),
+            'action' => 'presence.create',
+            'description' => $enregistres . ' présence(s) enregistrée(s) le ' . $carbon->format('d/m/Y'),
             'ip_address' => request()->ip(),
         ]);
 
-        return back()->with('success', 'Séance créée avec succès.');
-    });
+        return redirect('/presences')->with(
+            'success',
+            $enregistres . ' présence(s) enregistrée(s) pour le ' . $carbon->format('d/m/Y') . '.'
+        );
+    })->name('presences.store');
 
     Route::post('/profil', function () {
         // Mise à jour du profil

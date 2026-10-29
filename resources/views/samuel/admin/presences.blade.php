@@ -21,31 +21,61 @@
             </div>
         </header>
         <div class="content">
+            @if (session('success'))
+                <div style="background:#dcfce7; color:#15803D; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px;">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div style="background:#fee2e2; color:#DC2626; padding:14px 16px; border-radius:10px; margin-bottom:18px; font-size:14px;">
+                    @foreach ($errors->all() as $erreur)
+                        <div>{{ $erreur }}</div>
+                    @endforeach
+                </div>
+            @endif
             <div class="panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                     <h3 style="margin:0;">Historique des présences</h3>
-                    <a href="/nouvelle-seance" class="btn btn-gold">+ Nouvelle séance</a>
+                    <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la présence</a>
                 </div>
-                @if ($presences->isEmpty())
+                @if ($dates->isEmpty())
                     <div class="empty-state"><div class="icon">✅</div><p>Aucune présence enregistrée pour le moment</p><p style="font-size:13px;">Les répétitions ont lieu tous les samedis</p></div>
                 @else
-                    <table>
-                        <thead><tr><th>Samuel</th><th>Date (samedi)</th><th>Statut</th></tr></thead>
-                        <tbody>
-                            @foreach ($presences as $presence)
-                            <tr>
-                                <td><strong>{{ $presence->samuel->nom_complet ?? '—' }}</strong></td>
-                                <td>{{ \Carbon\Carbon::parse($presence->date_repetition)->format('d/m/Y') }}</td>
-                                <td>
-                                    @if ($presence->statut === 'present') <span class="badge badge-present">Présent</span>
-                                    @elseif ($presence->statut === 'absent') <span class="badge badge-absent">Absent</span>
-                                    @elseif ($presence->statut === 'retard') <span class="badge badge-retard">Retard</span>
-                                    @else <span class="badge badge-permission">Permissionnaire</span> @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date (samedi)</th>
+                                    <th style="text-align:center;">Présents</th>
+                                    <th style="text-align:center;">Absents</th>
+                                    <th style="text-align:center;">Retards</th>
+                                    <th style="text-align:center;">Permissions</th>
+                                    <th style="text-align:center;">Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($dates as $ligne)
+                                @php $jour = \Carbon\Carbon::parse($ligne->date_repetition); @endphp
+                                <tr>
+                                    <td>
+                                        <strong>{{ $jour->format('d/m/Y') }}</strong>
+                                        <div style="font-size:12px; color:#6B7280;">{{ $jour->translatedFormat('l') }}</div>
+                                    </td>
+                                    <td style="text-align:center;"><span class="badge badge-present">{{ (int) $ligne->presents }}</span></td>
+                                    <td style="text-align:center;"><span class="badge badge-absent">{{ (int) $ligne->absents }}</span></td>
+                                    <td style="text-align:center;"><span class="badge badge-retard">{{ (int) $ligne->retards }}</span></td>
+                                    <td style="text-align:center;"><span class="badge badge-permission">{{ (int) $ligne->permissions }}</span></td>
+                                    <td style="text-align:center;"><strong>{{ (int) $ligne->total }}</strong></td>
+                                    <td>
+                                        <a href="/nouvelle-seance?date={{ $jour->toDateString() }}"
+                                           class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
         </div>
