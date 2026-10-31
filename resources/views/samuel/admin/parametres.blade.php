@@ -6,6 +6,18 @@
     <title>Paramètres du compte - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 900px; align-items: start; }
+        .param-photo { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
+        @media (max-width: 800px) {
+            .param-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .param-photo { flex-direction: column; align-items: stretch; text-align: center; }
+            .param-photo form { min-width: 0 !important; }
+            .param-photo form .btn, .panel form .btn { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
     @include('samuel.dashboards.partials.sidebar')
@@ -42,7 +54,7 @@
             <!-- Photo de profil -->
             <div class="panel" style="max-width:900px;">
                 <h3>📷 Photo de profil</h3>
-                <div style="display:flex; align-items:center; gap:30px; flex-wrap:wrap;">
+                <div class="param-photo">
                     <div style="text-align:center;">
                         @if (auth()->user()->photo_url)
                             <img src="{{ auth()->user()->photo_url }}" alt="Photo de profil" style="width:120px; height:120px; border-radius:50%; object-fit:cover; border:4px solid #D4A72C;">
@@ -65,7 +77,7 @@
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:25px; max-width:900px; align-items:start;">
+            <div class="param-grid">
 
                 <!-- Informations personnelles -->
                 <div class="panel" style="margin-bottom:0;">

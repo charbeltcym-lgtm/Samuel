@@ -6,6 +6,13 @@
     <title>Nouvel administrateur - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .form-actions { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        @media (max-width: 600px) {
+            .form-actions { flex-direction: column; }
+            .form-actions .btn { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
     @include('samuel.dashboards.partials.sidebar')
@@ -31,7 +38,7 @@
                     <div class="form-group"><label>Nom complet</label><input type="text" name="name" value="{{ old('name') }}" required placeholder="Ex : Marie Claire"></div>
                     <div class="form-group"><label>Email</label><input type="email" name="email" value="{{ old('email') }}" required placeholder="Ex : marie@example.com"></div>
                     <div class="form-group"><label>Mot de passe</label><input type="password" name="password" required placeholder="Mot de passe initial"></div>
-                    <div style="display:flex; gap:10px; margin-top:25px;">
+                    <div class="form-actions">
                         <button type="submit" class="btn btn-gold" style="padding:12px 28px; font-size:15px;">Ajouter</button>
                         <a href="/administrateurs" class="btn btn-light" style="padding:12px 28px; font-size:15px;">Annuler</a>
                     </div>

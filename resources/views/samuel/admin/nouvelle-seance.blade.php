@@ -14,7 +14,8 @@
         .pres-table input[type="radio"] { width: 20px; height: 20px; accent-color: #172554; cursor: pointer; }
         .pres-table tr:hover { background: #F8FAFC; }
         .pres-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
-        .pres-toolbar .form-group { margin-bottom: 0; }
+        .pres-toolbar .form-group { margin-bottom: 0; flex: 1 1 260px; min-width: 220px; }
+        .pres-toolbar .hint { display: block; color: #6B7280; font-size: 12.5px; margin-top: 5px; }
         .statut-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: #6B7280; margin-bottom: 14px; }
         .statut-legend span::before { content: "●"; margin-right: 5px; }
         .leg-present::before { color: #15803D !important; }
@@ -25,6 +26,26 @@
         .alert-success { background:#dcfce7; color:#15803D; padding:12px 16px; border-radius:10px; margin-bottom:18px; font-size:14px; }
         .row-name strong { color: #172554; }
         .row-name small { color: #6B7280; display: block; }
+        .pres-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .pres-head .compte { font-size: 14px; color: #6B7280; }
+        .pres-head .compte small { display: block; font-size: 12.5px; margin-top: 3px; }
+        .pres-actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .pres-table .col-name { min-width: 170px; }
+        .pres-table .col-statut { width: 90px; text-align: center; }
+        @media (max-width: 640px) {
+            .pres-toolbar { flex-direction: column; align-items: stretch; }
+            .pres-toolbar .form-group { flex: 1 1 auto; min-width: 0; }
+            .pres-toolbar .btn { width: 100%; text-align: center; padding: 12px 16px; }
+            .pres-head { flex-direction: column; align-items: stretch; }
+            .pres-head .btn { width: 100%; text-align: center; }
+            .pres-actions { flex-direction: column; }
+            .pres-actions .btn { width: 100%; text-align: center; }
+            .pres-table .col-statut { width: 56px; }
+            .pres-table th, .pres-table td { padding: 9px 4px; }
+            .pres-table th { font-size: 10px; letter-spacing: 0; }
+            .pres-table input[type="radio"] { width: 22px; height: 22px; }
+            .statut-legend { gap: 10px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -53,18 +74,19 @@
             @endif
 
             <div class="panel">
-                <h3>Répétition du samedi</h3>
+                <h3>Répétition du {{ ucfirst(\Carbon\Carbon::parse($dateIso)->translatedFormat('l j F Y')) }}</h3>
 
                 <form method="GET" action="/nouvelle-seance" class="pres-toolbar">
                     <div class="form-group">
                         <label for="date">Choisir un samedi</label>
                         <input type="date" id="date" name="date" value="{{ $dateIso }}">
-                        <small style="display:block; color:#6B7280; font-size:12.5px; margin-top:5px;">
-                            La répétition a toujours lieu le samedi : une autre date est automatiquement ramenée au samedi suivant.
+                        <small class="hint">
+                            Les répétitions ont lieu le samedi. Une autre date est ramenée au samedi précédent.
                         </small>
                     </div>
                     <button type="submit" class="btn btn-navy" style="padding:11px 20px;">Afficher cette date</button>
                     <a href="/presences" class="btn btn-light" style="padding:11px 20px;">Historique</a>
+                    <a href="{{ route('presences.pdf', ['date' => $dateIso]) }}" class="btn btn-gold" style="padding:11px 20px;">📄 Télécharger le PDF</a>
                 </form>
 
                 <div class="statut-legend">
@@ -86,26 +108,24 @@
                         @csrf
                         <input type="hidden" name="date_repetition" value="{{ $dateIso }}">
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
-                            <div style="font-size:14px; color:#6B7280;">
+                        <div class="pres-head">
+                            <div class="compte">
                                 {{ $samuels->count() }} Samuel{{ $samuels->count() > 1 ? 's' : '' }} —
                                 {{ \Carbon\Carbon::parse($dateIso)->format('d/m/Y') }}
-                                <div style="font-size:12.5px; margin-top:3px;">
-                                    Les Samuels sans statut sélectionné ne seront pas enregistrés.
-                                </div>
+                                <small>Les Samuels sans statut sélectionné ne seront pas enregistrés.</small>
                             </div>
                             <button type="button" class="btn btn-light" onclick="toutPresent()">Tout marquer présent</button>
                         </div>
 
-                        <div style="overflow-x:auto;">
+                        <div class="table-wrap">
                             <table class="pres-table">
                                 <thead>
                                     <tr>
-                                        <th>Samuel</th>
-                                        <th class="statut">Présent</th>
-                                        <th class="statut">Absent</th>
-                                        <th class="statut">Retard</th>
-                                        <th class="statut">Permissionnaire</th>
+                                        <th class="col-name">Samuel</th>
+                                        <th class="col-statut">Présent</th>
+                                        <th class="col-statut">Absent</th>
+                                        <th class="col-statut">Retard</th>
+                                        <th class="col-statut">Permission</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -131,7 +151,7 @@
                             </table>
                         </div>
 
-                        <div style="margin-top:22px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <div class="pres-actions">
                             <button type="submit" class="btn btn-gold" style="padding:12px 28px; font-size:15px;">Enregistrer la présence</button>
                             <a href="/presences" class="btn btn-light" style="padding:12px 20px;">Annuler</a>
                         </div>

@@ -6,6 +6,13 @@
     <title>Modifier un Samuel - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+        @media (max-width: 600px) {
+            .form-actions { flex-direction: column; }
+            .form-actions .btn { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
     @include('samuel.dashboards.partials.sidebar')
@@ -49,7 +56,16 @@
                         <input type="text" id="prenoms" name="prenoms" value="{{ old('prenoms', $samuel->prenoms) }}" required>
                     </div>
 
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:24px;">
+                    <div class="form-group">
+                        <label for="ordre">Ordre d'affichage (facultatif)</label>
+                        <input type="number" id="ordre" name="ordre" min="0" max="9999"
+                               value="{{ old('ordre', $samuel->ordre) }}" placeholder="100">
+                        <small style="display:block; color:#6B7280; font-size:12.5px; margin-top:5px;">
+                            Les petits nombres apparaissent en premier (1, 2, 3…). Laissez 100 pour un affichage alphabétique.
+                        </small>
+                    </div>
+
+                    <div class="form-actions">
                         <button type="submit" class="btn btn-gold" style="padding:12px 28px; font-size:15px;">Enregistrer les modifications</button>
                         <a href="/samuels" class="btn btn-light" style="padding:12px 20px;">Annuler</a>
                     </div>

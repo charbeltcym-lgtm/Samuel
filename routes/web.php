@@ -280,7 +280,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
     })->name('inscriptions.rejeter');
 
     Route::get('/samuels', function () {
-        $samuels = \App\Models\Samuel::orderByDesc('created_at')->get();
+        $samuels = \App\Models\Samuel::ordonne()->get();
         return view('samuel.admin.samuels', compact('samuels'));
     });
 
@@ -296,9 +296,11 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $data = request()->validate([
             'nom' => 'required|string|max:255',
             'prenoms' => 'required|string|max:255',
+            'ordre' => 'nullable|integer|min:0|max:9999',
         ], [
             'nom.required' => 'Le nom est obligatoire.',
             'prenoms.required' => 'Les prénoms sont obligatoires.',
+            'ordre.integer' => "L'ordre d'affichage doit être un nombre entier.",
         ]);
 
         $avant = $samuel->nom_complet;
@@ -306,6 +308,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $samuel->update([
             'nom' => trim($data['nom']),
             'prenoms' => trim($data['prenoms']),
+            'ordre' => $data['ordre'] ?? $samuel->ordre,
         ]);
 
         \App\Models\Activity::create([
@@ -354,6 +357,38 @@ Route::middleware(['auth', 'web.super'])->group(function () {
 
         return view('samuel.admin.presences', compact('dates'));
     });
+
+    Route::get('/presences/pdf', function () {
+        $date = \App\Support\DateRepetition::resoudre(request('date'));
+        $dateIso = $date->toDateString();
+
+        $samuels = \App\Models\Samuel::ordonne()->get();
+        $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
+            ->get()
+            ->keyBy('samuel_id');
+
+        $logo = public_path('images/logo-pdf.png');
+        $logoBase64 = file_exists($logo)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logo))
+            : null;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.presences-pdf', [
+            'date' => $date,
+            'dateIso' => $dateIso,
+            'samuels' => $samuels,
+            'presences' => $presences,
+            'logo' => $logoBase64,
+        ])->setPaper('a4', 'portrait');
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'presence.pdf',
+            'description' => 'Liste de présence téléchargée (PDF) pour le ' . $date->format('d/m/Y'),
+            'ip_address' => request()->ip(),
+        ]);
+
+        return $pdf->download('presences-' . $dateIso . '.pdf');
+    })->name('presences.pdf');
 
     Route::get('/historique', function () {
         $activites = \App\Models\Activity::with('user')->orderByDesc('created_at')->get();
@@ -440,22 +475,11 @@ Route::middleware(['auth', 'web.super'])->group(function () {
     });
 
     Route::get('/nouvelle-seance', function () {
-        try {
-            $date = request('date')
-                ? \Carbon\Carbon::parse(request('date'))
-                : \Carbon\Carbon::now();
-        } catch (\Throwable $e) {
-            $date = \Carbon\Carbon::now();
-        }
-
-        // La répétition a toujours lieu le samedi : on ramène la date au samedi.
-        if ($date->dayOfWeek !== \Carbon\Carbon::SATURDAY) {
-            $date = $date->copy()->next(\Carbon\Carbon::SATURDAY);
-        }
+        $date = \App\Support\DateRepetition::resoudre(request('date'));
 
         $dateIso = $date->toDateString();
 
-        $samuels = \App\Models\Samuel::orderBy('nom')->orderBy('prenoms')->get();
+        $samuels = \App\Models\Samuel::ordonne()->get();
         $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
             ->get()
             ->keyBy('samuel_id');

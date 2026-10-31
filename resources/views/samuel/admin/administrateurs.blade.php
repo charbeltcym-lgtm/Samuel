@@ -22,26 +22,28 @@
         </header>
         <div class="content">
             <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
-                    <h3 style="margin:0;">Liste des administrateurs ({{ $administrateurs->count() }})</h3>
+                <div class="page-head">
+                    <h3>Liste des administrateurs ({{ $administrateurs->count() }})</h3>
                     <a href="/nouvel-admin" class="btn btn-gold">+ Nouvel administrateur</a>
                 </div>
                 @if ($administrateurs->isEmpty())
                     <div class="empty-state"><div class="icon">🛡️</div><p>Aucun administrateur désigné pour le moment</p></div>
                 @else
+                    <div class="table-wrap">
                     <table>
                         <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th></tr></thead>
                         <tbody>
                             @foreach ($administrateurs as $admin)
                             <tr>
                                 <td><strong>{{ $admin->name }}</strong></td>
-                                <td>{{ $admin->email }}</td>
+                                <td style="word-break:break-all;">{{ $admin->email }}</td>
                                 <td>{{ $admin->role === 'super_admin' ? 'Super admin' : 'Administrateur' }}</td>
                                 <td><span class="badge badge-{{ $admin->status === 'active' ? 'active' : 'pending' }}">{{ $admin->status === 'active' ? 'Actif' : 'En attente' }}</span></td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 @endif
             </div>
         </div>

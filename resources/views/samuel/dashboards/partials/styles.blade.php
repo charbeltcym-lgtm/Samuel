@@ -58,6 +58,9 @@
     .footer .motto { color: #D4A72C; font-size: 12px; margin-top: 4px; letter-spacing: 2px; }
     .nav-toggle { display: none; }
     .hamburger { display: none; }
+    .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .page-head h3 { margin: 0; }
     @media (max-width: 900px) {
         .main { margin-left: 0; }
         .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.35); }
@@ -67,13 +70,21 @@
         .topbar .page-title { font-size: 17px; }
         .topbar .profile .info { display: none; }
         .content { padding: 16px; }
-        .panel { padding: 16px; overflow-x: auto; }
-        .panel table { min-width: 520px; }
+        .panel { padding: 16px; }
+        .table-wrap table { min-width: 520px; }
         h1 { font-size: 20px; }
     }
     @media (max-width: 600px) {
         .topbar-right { gap: 12px; }
         .profile .avatar { width: 34px; height: 34px; font-size: 14px; }
         .notif-bell { width: 38px; height: 38px; }
+        .page-head { flex-direction: column; align-items: stretch; }
+        .page-head > .btn, .page-head > a.btn, .page-head > form { width: 100%; }
+        .page-head > .btn, .page-head > a.btn { text-align: center; }
+        .action-row { flex-direction: column; }
+        .action-row > .btn, .action-row > a.btn, .action-row > form, .action-row > button { width: 100%; }
+        .action-row > .btn, .action-row > a.btn, .action-row > button { text-align: center; }
+        .action-row > form > .btn { width: 100%; }
+        .panel h3 { font-size: 16px; }
     }
 </style>

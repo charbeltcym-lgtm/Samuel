@@ -212,7 +212,7 @@ class SamuelController extends Controller
     public function getSamuels()
     {
         return response()->json(
-            Samuel::orderBy('nom')->orderBy('prenoms')->get()
+            Samuel::ordonne()->get()
         );
     }
 

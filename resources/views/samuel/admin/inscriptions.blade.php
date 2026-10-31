@@ -6,6 +6,14 @@
     <title>Inscriptions - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .inscription-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .inscription-form { display: flex; gap: 6px; align-items: center; }
+        @media (max-width: 600px) {
+            .inscription-actions, .inscription-form { flex-direction: column; align-items: stretch; width: 100%; }
+            .inscription-actions .btn, .inscription-form .btn, .inscription-form select { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
     @include('samuel.dashboards.partials.sidebar')
@@ -34,25 +42,26 @@
                 </div>
             @endif
             <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
-                    <h3 style="margin:0;">Demandes d'inscription ({{ $inscriptions->count() }})</h3>
+                <div class="page-head">
+                    <h3>Demandes d'inscription ({{ $inscriptions->count() }})</h3>
                     <a href="/nouveau-samuel" class="btn btn-gold">+ Nouveau Samuel</a>
                 </div>
                 @if ($inscriptions->isEmpty())
                     <div class="empty-state"><div class="icon">📝</div><p>Aucune demande d'inscription pour le moment</p></div>
                 @else
+                    <div class="table-wrap">
                     <table>
                         <thead><tr><th>Nom</th><th>Email</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
                         <tbody>
                             @foreach ($inscriptions as $inscription)
                             <tr>
                                 <td><strong>{{ $inscription->name }}</strong></td>
-                                <td>{{ $inscription->email }}</td>
+                                <td style="word-break:break-all;">{{ $inscription->email }}</td>
                                 <td>{{ $inscription->created_at->format('d/m/Y') }}</td>
                                 <td><span class="badge badge-pending">En attente</span></td>
                                 <td>
-                                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                                        <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} avec le role selectionne et generer le code d\'activation ?');" style="display:flex; gap:6px; align-items:center;">
+                                    <div class="inscription-actions">
+                                        <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} avec le role selectionne et generer le code d\'activation ?');" class="inscription-form">
                                             @csrf
                                             <select name="role" style="padding:5px 8px; border:1px solid #E5E7EB; border-radius:8px; font-size:13px; background:#fff;">
                                                 <option value="user">Simple Samuel</option>
@@ -70,6 +79,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 @endif
             </div>
         </div>

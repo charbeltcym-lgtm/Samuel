@@ -6,6 +6,14 @@
     <title>Présences - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .pres-row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        @media (max-width: 600px) {
+            .pres-row-actions { flex-direction: column; }
+            .pres-row-actions .btn { width: 100%; text-align: center; }
+            .pres-total { display: none; }
+        }
+    </style>
 </head>
 <body>
     @include('samuel.dashboards.partials.sidebar')
@@ -34,14 +42,14 @@
                 </div>
             @endif
             <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
-                    <h3 style="margin:0;">Historique des présences</h3>
+                <div class="page-head">
+                    <h3>Historique des présences</h3>
                     <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la présence</a>
                 </div>
                 @if ($dates->isEmpty())
                     <div class="empty-state"><div class="icon">✅</div><p>Aucune présence enregistrée pour le moment</p><p style="font-size:13px;">Les répétitions ont lieu tous les samedis</p></div>
                 @else
-                    <div style="overflow-x:auto;">
+                    <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
@@ -50,7 +58,7 @@
                                     <th style="text-align:center;">Absents</th>
                                     <th style="text-align:center;">Retards</th>
                                     <th style="text-align:center;">Permissions</th>
-                                    <th style="text-align:center;">Total</th>
+                                    <th style="text-align:center;" class="pres-total">Total</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -66,10 +74,14 @@
                                     <td style="text-align:center;"><span class="badge badge-absent">{{ (int) $ligne->absents }}</span></td>
                                     <td style="text-align:center;"><span class="badge badge-retard">{{ (int) $ligne->retards }}</span></td>
                                     <td style="text-align:center;"><span class="badge badge-permission">{{ (int) $ligne->permissions }}</span></td>
-                                    <td style="text-align:center;"><strong>{{ (int) $ligne->total }}</strong></td>
+                                    <td style="text-align:center;" class="pres-total"><strong>{{ (int) $ligne->total }}</strong></td>
                                     <td>
-                                        <a href="/nouvelle-seance?date={{ $jour->toDateString() }}"
-                                           class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                        <div class="pres-row-actions">
+                                            <a href="/nouvelle-seance?date={{ $jour->toDateString() }}"
+                                               class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                            <a href="{{ route('presences.pdf', ['date' => $jour->toDateString()]) }}"
+                                               class="btn btn-light" style="padding:5px 10px;">📄 PDF</a>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach

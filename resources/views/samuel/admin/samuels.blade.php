@@ -27,35 +27,37 @@
                 </div>
             @endif
             <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
-                    <h3 style="margin:0;">Liste des Samuels ({{ $samuels->count() }})</h3>
+                <div class="page-head">
+                    <h3>Liste des Samuels ({{ $samuels->count() }})</h3>
                     <a href="/nouveau-samuel" class="btn btn-gold">+ Nouveau Samuel</a>
                 </div>
                 @if ($samuels->isEmpty())
                     <div class="empty-state"><div class="icon">👥</div><p>Aucun Samuel inscrit pour le moment</p></div>
                 @else
-                    <table>
-                        <thead><tr><th>Nom</th><th>Prénoms</th><th>Ajouté le</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            @foreach ($samuels as $samuel)
-                            <tr>
-                                <td><strong>{{ $samuel->nom }}</strong></td>
-                                <td>{{ $samuel->prenoms }}</td>
-                                <td>{{ $samuel->created_at->format('d/m/Y') }}</td>
-                                <td>
-                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                        <a href="{{ route('samuels.edit', $samuel->id) }}" class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
-                                        <form action="{{ route('samuels.destroy', $samuel->id) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $samuel->nom_complet }} et ses présences ?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-red" style="padding:5px 10px;">Supprimer</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Nom</th><th>Prénoms</th><th>Ajouté le</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                @foreach ($samuels as $samuel)
+                                <tr>
+                                    <td><strong>{{ $samuel->nom }}</strong></td>
+                                    <td>{{ $samuel->prenoms }}</td>
+                                    <td>{{ $samuel->created_at->format('d/m/Y') }}</td>
+                                    <td>
+                                        <div class="action-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <a href="{{ route('samuels.edit', $samuel->id) }}" class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                            <form action="{{ route('samuels.destroy', $samuel->id) }}" method="POST" onsubmit="return confirm('Supprimer définitivement {{ $samuel->nom_complet }} et ses présences ?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-red" style="padding:5px 10px;">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
         </div>

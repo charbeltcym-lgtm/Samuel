@@ -128,4 +128,99 @@ class PresenceWebTest extends TestCase
         $this->actingAs($admin)->get('/samuels')->assertRedirect('/login');
         $this->assertGuest();
     }
+
+    public function test_les_samuels_sont_ordonnes_avec_tonou_et_agbossaga_en_premier(): void
+    {
+        $user = $this->superAdmin();
+
+        $autres = Samuel::create(['nom' => 'ALPHA', 'prenoms' => 'Premier']);
+        Samuel::create(['nom' => 'AGBOSSAGA', 'prenoms' => 'Jude', 'ordre' => 2]);
+        Samuel::create(['nom' => 'TONOU', 'prenoms' => 'Charbel', 'ordre' => 1]);
+
+        $this->assertSame(
+            ['TONOU', 'AGBOSSAGA', 'ALPHA'],
+            Samuel::ordonne()->pluck('nom')->all()
+        );
+
+        $this->actingAs($user)
+            ->get('/nouvelle-seance')
+            ->assertOk()
+            ->assertSeeInOrder(['TONOU', 'AGBOSSAGA', 'ALPHA']);
+    }
+
+    public function test_le_champ_ordre_est_modifiable_depuis_le_web(): void
+    {
+        $user = $this->superAdmin();
+        $samuel = Samuel::create(['nom' => 'TEST', 'prenoms' => 'Temporaire']);
+
+        $this->actingAs($user)->get('/samuels/' . $samuel->id . '/modifier')->assertOk();
+
+        $this->actingAs($user)
+            ->put('/samuels/' . $samuel->id, [
+                'nom' => 'TEST',
+                'prenoms' => 'Temporaire',
+                'ordre' => 3,
+            ])
+            ->assertRedirect('/samuels');
+
+        $this->assertSame(3, $samuel->fresh()->ordre);
+    }
+
+    public function test_la_liste_de_presence_est_telechargeable_en_pdf(): void
+    {
+        $user = $this->superAdmin();
+        $samuel = Samuel::create(['nom' => 'TONOU', 'prenoms' => 'Charbel', 'ordre' => 1]);
+        $samedi = now()->previous(Carbon::SATURDAY)->toDateString();
+
+        Presence::create([
+            'samuel_id' => $samuel->id,
+            'date_repetition' => $samedi,
+            'statut' => 'present',
+            'synchronise' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/presences/pdf?date=' . $samedi);
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('content-disposition'));
+
+        $base = $response->baseResponse;
+        $contenu = $base instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse
+            ? file_get_contents($base->getFile()->getPathname())
+            : $response->getContent();
+
+        $this->assertStringStartsWith('%PDF', $contenu);
+    }
+
+    public function test_la_date_par_defaut_est_le_samedi_le_plus_recent(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-31 10:00:00')); // un samedi
+
+        $this->assertSame('2026-10-31', \App\Support\DateRepetition::resoudre()->toDateString());
+        $this->assertSame('2026-10-31', \App\Support\DateRepetition::resoudre('2026-10-31')->toDateString());
+        $this->assertSame('2026-10-24', \App\Support\DateRepetition::resoudre('2026-10-29')->toDateString());
+        $this->assertSame('2026-10-31', \App\Support\DateRepetition::resoudre('2026-11-02')->toDateString());
+
+        $this->travelBack();
+    }
+
+    public function test_l_api_mobile_renvoie_les_samuels_dans_le_meme_ordre(): void
+    {
+        $user = $this->superAdmin();
+        $user->update(['api_token' => 'jeton-de-test']);
+
+        Samuel::create(['nom' => 'ALPHA', 'prenoms' => 'Premier']);
+        Samuel::create(['nom' => 'AGBOSSAGA', 'prenoms' => 'Jude', 'ordre' => 2]);
+        Samuel::create(['nom' => 'TONOU', 'prenoms' => 'Charbel', 'ordre' => 1]);
+
+        $response = $this->withHeader('Authorization', 'Bearer jeton-de-test')
+            ->getJson('/api/admin/samuels');
+
+        $response->assertOk();
+        $this->assertSame(
+            ['TONOU', 'AGBOSSAGA', 'ALPHA'],
+            array_column($response->json(), 'nom')
+        );
+    }
 }

@@ -6,6 +6,13 @@
     <title>Nouveau Samuel - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
+    <style>
+        .form-actions { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        @media (max-width: 600px) {
+            .form-actions { flex-direction: column; }
+            .form-actions .btn { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
 
@@ -46,7 +53,7 @@
                         <label for="prenoms">Prénoms</label>
                         <input type="text" name="prenoms" id="prenoms" value="{{ old('prenoms') }}" required placeholder="Ex : Charbel">
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:25px;">
+                    <div class="form-actions">
                         <button type="submit" class="btn btn-gold" style="padding:12px 28px; font-size:15px;">Ajouter le Samuel</button>
                         <a href="/samuels" class="btn btn-light" style="padding:12px 28px; font-size:15px;">Annuler</a>
                     </div>
