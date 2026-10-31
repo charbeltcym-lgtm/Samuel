@@ -124,9 +124,10 @@ class PresenceWebTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->actingAs($admin)->get('/nouvelle-seance')->assertRedirect('/login');
-        $this->actingAs($admin)->get('/samuels')->assertRedirect('/login');
-        $this->assertGuest();
+        // Un admin simple est redirigé vers son espace sans être déconnecté.
+        $this->actingAs($admin)->get('/nouvelle-seance')->assertRedirect('/espace');
+        $this->actingAs($admin)->get('/samuels')->assertRedirect('/espace');
+        $this->actingAs($admin)->get('/dashboard')->assertRedirect('/espace');
     }
 
     public function test_les_samuels_sont_ordonnes_avec_tonou_et_agbossaga_en_premier(): void

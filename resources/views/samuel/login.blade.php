@@ -24,7 +24,30 @@
         <div>
             <label for="email" class="block text-sm font-semibold text-gray-700">Adresse email</label>
             <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus
-                   autocomplete="username" placeholder="exemple@email.com"
+                   autocomplete="username"
+                   class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 shadow-sm focus:border-[#172554] focus:outline-none focus:ring-2 focus:ring-[#172554]/10">
+        </div>
+
+        <div>
+            <label for="password" class="block text-sm font-semibold text-gray-700">Mot de passe</label>
+            <input id="password" name="password" type="password" required autocomplete="current-password"
+                   class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 shadow-sm focus:border-[#172554] focus:outline-none focus:ring-2 focus:ring-[#172554]/10">
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 text-gray-600">
+                <input type="checkbox" name="remember" class="rounded border-gray-300 text-[#172554] focus:ring-[#172554]">
+                <span>Se souvenir de moi</span>
+            </label>
+            <a href="{{ route('password.request') }}" class="font-semibold text-[#172554] hover:text-[#D4A72C]">Mot de passe oublié ?</a>
+        </div>
+
+        <button type="submit" class="w-full rounded-xl bg-[#172554] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1e3a8a]">Se connecter</button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-gray-500">
+        <p>Première connexion ? <a href="{{ route('premiere-connexion') }}" class="font-semibold text-[#172554] hover:text-[#D4A72C]">Définir votre mot de passe</a></p>
+    </div>mplete="username" placeholder="exemple@email.com"
                    class="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-[#D4A72C] focus:outline-none focus:ring-2 focus:ring-[#D4A72C]/40">
         </div>
 

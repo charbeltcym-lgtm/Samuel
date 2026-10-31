@@ -27,17 +27,35 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        if ($request->user()->role !== 'super_admin') {
+        $user = $request->user();
+
+        $accesRefuse = null;
+
+        if ($user->status === 'pending') {
+            $accesRefuse = "Votre compte n'est pas encore activé. Utilisez « Première connexion » avec le code reçu par email.";
+        } elseif ($user->status === 'disabled') {
+            $accesRefuse = "Votre compte est désactivé. Contactez l'administrateur principal.";
+        } elseif (! in_array($user->role, ['admin', 'super_admin'], true)) {
+            $accesRefuse = "L'espace web est réservé aux administrateurs. Utilisez l'application mobile.";
+        }
+
+        if ($accesRefuse) {
             Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             throw ValidationException::withMessages([
-                'email' => "L'accès web est réservé à l'administrateur principal pour le moment.",
+                'email' => $accesRefuse,
             ]);
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $accueil = $user->role === 'super_admin'
+            ? route('dashboard', absolute: false)
+            : route('espace', absolute: false);
+
+        return redirect()->intended($accueil);
     }
 
     /**

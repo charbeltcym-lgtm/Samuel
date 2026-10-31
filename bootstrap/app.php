@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ApiRole;
 use App\Http\Middleware\ApiTokenAuth;
+use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.token' => ApiTokenAuth::class,
             'api.role' => ApiRole::class,
             'web.super' => EnsureSuperAdmin::class,
+            'web.admin' => EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

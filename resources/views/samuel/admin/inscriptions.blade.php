@@ -60,7 +60,11 @@
                                 <td>{{ $inscription->created_at->format('d/m/Y') }}</td>
                                 <td><span class="badge badge-pending">En attente</span></td>
                                 <td>
-                                    <div class="inscription-actions">
+                                    <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                                        @if($inscription->activation_code)
+                                            <div style="background:#f8fafc; border:1px solid #cbd5f5; color:#1e3a8a; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; letter-spacing:2px;">Code : {{ $inscription->activation_code }}</div>
+                                        @endif
+                                        <div class="inscription-actions">
                                         <form action="{{ route('inscriptions.valider', $inscription->id) }}" method="POST" onsubmit="return confirm('Valider l\'inscription de {{ $inscription->name }} avec le role selectionne et generer le code d\'activation ?');" class="inscription-form">
                                             @csrf
                                             <select name="role" style="padding:5px 8px; border:1px solid #E5E7EB; border-radius:8px; font-size:13px; background:#fff;">

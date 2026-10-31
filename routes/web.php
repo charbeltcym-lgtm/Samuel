@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Auth\RegisteredUserController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\PremiereConnexionController;
+use App\Http\Controllers\EspaceController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,9 @@ Route::get('/connexion', function () {
     return view('samuel.login');
 });
 
+Route::get('/premiere-connexion', [PremiereConnexionController::class, 'create'])->name('premiere-connexion');
+Route::post('/premiere-connexion', [PremiereConnexionController::class, 'store']);
+
 Route::get('/inscription', function () {
     return view('samuel.register');
 });
@@ -121,6 +125,19 @@ Route::get('/activation/{code}', function ($code) {
 Route::post('/verifier-code', function () {
     // Vérification du code d'activation
     return back()->with('success', 'Code vérifié avec succès');
+});
+
+Route::middleware(['auth', 'web.admin'])->group(function () {
+    Route::get('/espace', [EspaceController::class, 'index'])->name('espace');
+    Route::get('/espace/samuels', [EspaceController::class, 'samuels'])->name('espace.samuels');
+    Route::get('/espace/samuels/ajouter', [EspaceController::class, 'createSamuel'])->name('espace.samuels.create');
+    Route::post('/espace/samuels', [EspaceController::class, 'storeSamuel'])->name('espace.samuels.store');
+    Route::get('/espace/samuels/{id}/modifier', [EspaceController::class, 'editSamuel'])->name('espace.samuels.edit');
+    Route::put('/espace/samuels/{id}', [EspaceController::class, 'updateSamuel'])->name('espace.samuels.update');
+    Route::delete('/espace/samuels/{id}', [EspaceController::class, 'destroySamuel'])->name('espace.samuels.destroy');
+    Route::get('/espace/presence', [EspaceController::class, 'presence'])->name('espace.presence');
+    Route::post('/espace/presence', [EspaceController::class, 'storePresence'])->name('espace.presence.store');
+    Route::get('/espace/chapitres/{numero}', [EspaceController::class, 'chapitre'])->name('espace.chapitre');
 });
 
 Route::middleware(['auth', 'web.super'])->group(function () {
@@ -284,6 +301,28 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         return view('samuel.admin.samuels', compact('samuels'));
     });
 
+    Route::get('/samuels/liste-telecharger', function () {
+        $user = auth()->user();
+        if (! in_array($user->role, ['admin', 'super_admin'], true)) {
+            abort(403);
+        }
+
+        $samuels = \App\Models\Samuel::ordonne()->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.samuels-liste-pdf', [
+            'samuels' => $samuels,
+        ])->setPaper('a4', 'portrait');
+
+        \App\Models\Activity::create([
+            'user_id' => $user->id,
+            'action' => 'samuels.pdf',
+            'description' => 'Liste des Samuels téléchargée (PDF)',
+            'ip_address' => request()->ip(),
+        ]);
+
+        return $pdf->download('liste-samuels-' . now()->format('Y-m-d') . '.pdf');
+    })->name('samuels.liste.pdf');
+
     Route::get('/samuels/{id}/modifier', function ($id) {
         $samuel = \App\Models\Samuel::findOrFail($id);
 
@@ -355,12 +394,43 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             ->orderByDesc('date_repetition')
             ->get();
 
-        return view('samuel.admin.presences', compact('dates'));
+        $signatures = \App\Models\PresenceSession::pluck('signed_at', 'date_repetition');
+
+        return view('samuel.admin.presences', compact('dates', 'signatures'));
     });
+
+    Route::post('/presences/{date}/signer', function ($date) {
+        $user = auth()->user();
+        if ($user->role !== 'super_admin') {
+            abort(403);
+        }
+
+        $carbone = \Carbon\Carbon::parse($date);
+        if ($carbone->dayOfWeek !== \Carbon\Carbon::SATURDAY) {
+            abort(422);
+        }
+
+        \App\Models\PresenceSession::updateOrCreate(
+            ['date_repetition' => $carbone->toDateString()],
+            ['signed_at' => now(), 'signed_by' => $user->id]
+        );
+
+        return back()->with('success', 'Liste signée pour le ' . $carbone->format('d/m/Y') . '.');
+    })->name('presences.signer');
 
     Route::get('/presences/pdf', function () {
         $date = \App\Support\DateRepetition::resoudre(request('date'));
         $dateIso = $date->toDateString();
+
+        $user = auth()->user();
+        if ($user->role !== 'super_admin') {
+            abort(403, 'Seul le super administrateur peut télécharger le document signé.');
+        }
+
+        $session = \App\Models\PresenceSession::where('date_repetition', $dateIso)->first();
+        if (! $session) {
+            return back()->withErrors(['pdf' => 'La liste doit être signée par le super administrateur avant de pouvoir être téléchargée.']);
+        }
 
         $samuels = \App\Models\Samuel::ordonne()->get();
         $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)

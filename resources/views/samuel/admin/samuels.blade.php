@@ -29,7 +29,10 @@
             <div class="panel">
                 <div class="page-head">
                     <h3>Liste des Samuels ({{ $samuels->count() }})</h3>
-                    <a href="/nouveau-samuel" class="btn btn-gold">+ Nouveau Samuel</a>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <a href="{{ route('samuels.liste.pdf') }}" class="btn btn-light">📄 Télécharger la liste</a>
+                        <a href="/nouveau-samuel" class="btn btn-gold">+ Nouveau Samuel</a>
+                    </div>
                 </div>
                 @if ($samuels->isEmpty())
                     <div class="empty-state"><div class="icon">👥</div><p>Aucun Samuel inscrit pour le moment</p></div>
