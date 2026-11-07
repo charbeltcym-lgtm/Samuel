@@ -334,4 +334,46 @@ class SamuelController extends Controller
 
         return response()->json(['message' => 'Rôle mis à jour', 'user' => $user]);
     }
+
+    /**
+     * Crée ou restaure un compte en attente d'activation (première connexion), super admin uniquement.
+     */
+    public function upsertPendingUser(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'role' => 'required|in:user,admin,super_admin',
+            'activation_code' => 'required|string|min:4|max:20',
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+        $randomHash = \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40));
+        $payload = [
+            'name' => $data['name'],
+            'role' => $data['role'],
+            'activation_code' => $data['activation_code'],
+        ];
+
+        if ($user) {
+            // Ne pas rétrograder un compte déjà actif/sécurisé, mais permettre la restauration si pending/disabled.
+            if ($user->status !== 'active') {
+                $payload['status'] = 'pending';
+                $payload['password'] = $randomHash;
+                $payload['api_token'] = null;
+            }
+            $user->update($payload);
+        } else {
+            $user = User::create($payload + [
+                'email' => $data['email'],
+                'status' => 'pending',
+                'password' => $randomHash,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Compte en attente prêt pour la première connexion.',
+            'user' => $user->fresh(),
+        ]);
+    }
 }

@@ -64,4 +64,5 @@ Route::middleware(['api.token', 'api.role:admin,super_admin'])->group(function (
 Route::middleware(['api.token', 'api.role:super_admin'])->group(function () {
     Route::get('/admin/all-samuels', [SamuelController::class, 'getAllSamuels']);
     Route::put('/admin/samuels/{id}/role', [SamuelController::class, 'updateSamuelRole']);
+    Route::post('/admin/users/pending', [SamuelController::class, 'upsertPendingUser']);
 });
