@@ -410,10 +410,16 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(422);
         }
 
-        \App\Models\PresenceSession::updateOrCreate(
-            ['date_repetition' => $carbone->toDateString()],
-            ['signed_at' => now(), 'signed_by' => $user->id]
-        );
+        $existing = \App\Models\PresenceSession::whereDate('date_repetition', $carbone->toDateString())->first();
+        if ($existing) {
+            $existing->update(['signed_at' => now(), 'signed_by' => $user->id]);
+        } else {
+            \App\Models\PresenceSession::create([
+                'date_repetition' => $carbone->toDateString(),
+                'signed_at' => now(),
+                'signed_by' => $user->id,
+            ]);
+        }
 
         return back()->with('success', 'Liste signée pour le ' . $carbone->format('d/m/Y') . '.');
     })->name('presences.signer');
@@ -427,7 +433,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(403, 'Seul le super administrateur peut télécharger le document signé.');
         }
 
-        $session = \App\Models\PresenceSession::where('date_repetition', $dateIso)->first();
+        $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
         if (! $session) {
             return back()->withErrors(['pdf' => 'La liste doit être signée par le super administrateur avant de pouvoir être téléchargée.']);
         }
@@ -464,6 +470,51 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $activites = \App\Models\Activity::with('user')->orderByDesc('created_at')->get();
         return view('samuel.admin.historique', compact('activites'));
     });
+
+    Route::delete('/historique/{id}', function ($id) {
+        abort_unless(auth()->user()->role === 'super_admin', 403);
+        $activite = \App\Models\Activity::findOrFail($id);
+        $activite->delete();
+        return back()->with('success', 'Entrée d\'historique supprimée.');
+    })->name('historique.destroy');
+
+    Route::post('/historique/vider-periode', function () {
+        abort_unless(auth()->user()->role === 'super_admin', 403);
+        $data = request()->validate([
+            'date_debut' => 'nullable|date',
+            'date_fin' => 'nullable|date|after_or_equal:date_debut',
+        ], [
+            'date_fin.after_or_equal' => 'La date de fin doit être après ou égale à la date de début.',
+        ]);
+        if (empty($data['date_debut']) && empty($data['date_fin'])) {
+            return back()->withErrors(['periode' => 'Choisissez au moins une date (début ou fin).']);
+        }
+        $q = \App\Models\Activity::query();
+        if (!empty($data['date_debut'])) $q->whereDate('created_at', '>=', $data['date_debut']);
+        if (!empty($data['date_fin'])) $q->whereDate('created_at', '<=', $data['date_fin']);
+        $count = $q->count();
+        $q->delete();
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'historique.purge',
+            'description' => $count . ' entrée(s) d\'historique supprimée(s) sur la période sélectionnée.',
+            'ip_address' => request()->ip(),
+        ]);
+        return back()->with('success', $count . ' entrée(s) supprimée(s).');
+    })->name('historique.vider-periode');
+
+    Route::post('/historique/vider-tout', function () {
+        abort_unless(auth()->user()->role === 'super_admin', 403);
+        $count = \App\Models\Activity::count();
+        \App\Models\Activity::query()->delete();
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'historique.purge',
+            'description' => 'Historique vidé (' . $count . ' entrée(s) supprimée(s)).',
+            'ip_address' => request()->ip(),
+        ]);
+        return back()->with('success', 'Historique vidé (' . $count . ' entrée(s)).');
+    })->name('historique.vider-tout');
 
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);

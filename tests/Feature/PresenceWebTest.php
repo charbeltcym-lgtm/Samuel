@@ -180,6 +180,9 @@ class PresenceWebTest extends TestCase
             'synchronise' => true,
         ]);
 
+        // La liste doit être signée par le super administrateur avant téléchargement.
+        $this->actingAs($user)->post('/presences/' . $samedi . '/signer')->assertRedirect();
+
         $response = $this->actingAs($user)->get('/presences/pdf?date=' . $samedi);
 
         $response->assertOk();

@@ -38,6 +38,7 @@ Route::middleware('api.token')->group(function () {
 
     // Présences
     Route::get('/presences', [SamuelController::class, 'getPresences']);
+    Route::get('/presences/dates', [SamuelController::class, 'getPresencesDates']);
     Route::post('/presences', [SamuelController::class, 'savePresence']);
 
     // Statistiques

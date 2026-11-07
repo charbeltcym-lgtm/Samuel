@@ -113,6 +113,30 @@ class SamuelController extends Controller
         return response()->json($query->orderByDesc('date_repetition')->get());
     }
 
+    /**
+     * Liste des dates de présence (historique) avec compteurs, pour le mobile.
+     */
+    public function getPresencesDates(Request $request)
+    {
+        $dates = Presence::selectRaw(
+            "date(date_repetition) as date_repetition,
+             count(*) as total,
+             sum(case when statut = 'present' then 1 else 0 end) as presents,
+             sum(case when statut = 'absent' then 1 else 0 end) as absents,
+             sum(case when statut = 'retard' then 1 else 0 end) as retards,
+             sum(case when statut = 'permissionnaire' then 1 else 0 end) as permissions"
+        )
+            ->groupByRaw('date(date_repetition)')
+            ->orderByDesc('date_repetition')
+            ->get()
+            ->map(function ($row) {
+                $row->date_repetition = \Illuminate\Support\Carbon::parse($row->date_repetition)->toDateString();
+                return $row;
+            });
+
+        return response()->json(['dates' => $dates]);
+    }
+
     public function savePresence(Request $request)
     {
         $data = $request->validate([
