@@ -98,12 +98,18 @@
         .legend li { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; color: #374151; }
         .legend .dotc { width: 12px; height: 12px; border-radius: 3px; }
 
-        /* ---------- Activité ---------- */
-        .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .activity-text { font-size: 14px; color: #374151; }
-        .activity-time { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
+        /* ---------- Activité récente ---------- */
+        .activity-list { display: flex; flex-direction: column; gap: 10px; }
+        .activity-item { display: flex; gap: 12px; padding: 14px; border-radius: 12px; background: #F9FAFB; border: 1px solid #F1F5F9; align-items: flex-start; transition: background .15s ease, border-color .15s ease; }
+        .activity-item:hover { background: #F3F4F6; border-color: #E5E7EB; }
+        .activity-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; background: #D4A72C; box-shadow: 0 0 0 4px rgba(212,167,44,.15); }
+        .activity-body { flex: 1; min-width: 0; }
+        .activity-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .activity-text { font-size: 14px; color: #1F2937; line-height: 1.45; }
+        .activity-time { font-size: 12px; color: #6B7280; white-space: nowrap; }
+        .activity-meta { margin-top: 4px; font-size: 12px; color: #9CA3AF; }
+        .activity-more { display: inline-flex; margin-top: 14px; font-size: 13px; font-weight: 600; color: #172554; text-decoration: none; }
+        .activity-more:hover { color: #D4A72C; }
 
         .empty-state { text-align: center; padding: 30px; color: #9CA3AF; }
         .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
@@ -335,22 +341,40 @@
                 </div>
 
                 <div class="panel">
-                    <h3>Activité récente</h3>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px;">
+                        <h3 style="margin:0;">Activité récente</h3>
+                        <a href="/historique" style="font-size:13px; font-weight:600; color:#172554; text-decoration:none;">Voir tout →</a>
+                    </div>
                     @if ($activites->isEmpty())
                         <div class="empty-state">
                             <div class="icon">📋</div>
                             <p>Aucune activité enregistrée</p>
                         </div>
                     @else
-                        @foreach ($activites as $activite)
-                        <div class="activity-item">
-                            <div class="activity-icon" style="background:#EEF2FF;">📌</div>
-                            <div>
-                                <div class="activity-text">{{ $activite->description }}</div>
-                                <div class="activity-time">{{ $activite->created_at->diffForHumans() }}</div>
+                        <div class="activity-list">
+                            @foreach ($activites as $activite)
+                            @php
+                                $action = $activite->action ?? '';
+                                $dot = '#D4A72C';
+                                if (str_contains($action, 'delete') || str_contains($action, 'rejeter')) $dot = '#DC2626';
+                                elseif (str_contains($action, 'create') || str_contains($action, 'valider') || str_contains($action, 'presence')) $dot = '#15803D';
+                                elseif (str_contains($action, 'update') || str_contains($action, 'pdf')) $dot = '#1D4ED8';
+                            @endphp
+                            <div class="activity-item">
+                                <span class="activity-dot" style="background:{{ $dot }}; box-shadow:0 0 0 4px {{ $dot }}22;"></span>
+                                <div class="activity-body">
+                                    <div class="activity-top">
+                                        <div class="activity-text">{{ $activite->description }}</div>
+                                        <div class="activity-time">{{ $activite->created_at->diffForHumans() }}</div>
+                                    </div>
+                                    <div class="activity-meta">
+                                        {{ $activite->created_at->format('d/m/Y à H:i') }}@if($activite->user) · {{ $activite->user->name }}@endif
+                                    </div>
+                                </div>
                             </div>
+                            @endforeach
                         </div>
-                        @endforeach
+                        <a class="activity-more" href="/historique">Ouvrir l'historique complet</a>
                     @endif
                 </div>
             </div>

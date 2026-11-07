@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrÃ©sences - Samuel App</title>
+    <title>Présences - Samuel App</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('samuel.dashboards.partials.styles')
     <style>
@@ -19,7 +19,7 @@
     @include('samuel.dashboards.partials.sidebar')
     <div class="main">
         <header class="topbar">
-            <div class="page-title">PrÃ©sences</div>
+            <div class="page-title">Présences</div>
             <div class="topbar-right">
                 @include('samuel.dashboards.partials.notification-bell')
                 <div class="profile">
@@ -43,18 +43,18 @@
             @endif
             <div class="panel">
                 <div class="page-head">
-                    <h3>Historique des prÃ©sences</h3>
-                    <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la prÃ©sence</a>
+                    <h3>Historique des présences</h3>
+                    <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la présence</a>
                 </div>
                 @if ($dates->isEmpty())
-                    <div class="empty-state"><div class="icon">âœ…</div><p>Aucune prÃ©sence enregistrÃ©e pour le moment</p><p style="font-size:13px;">Les rÃ©pÃ©titions ont lieu tous les samedis</p></div>
+                    <div class="empty-state"><div class="icon">✅</div><p>Aucune présence enregistrée pour le moment</p><p style="font-size:13px;">Les répétitions ont lieu tous les samedis</p></div>
                 @else
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Date (samedi)</th>
-                                    <th style="text-align:center;">PrÃ©sents</th>
+                                    <th style="text-align:center;">Présents</th>
                                     <th style="text-align:center;">Absents</th>
                                     <th style="text-align:center;">Retards</th>
                                     <th style="text-align:center;">Permissions</th>
@@ -76,23 +76,26 @@
                                     <td style="text-align:center;"><span class="badge badge-permission">{{ (int) $ligne->permissions }}</span></td>
                                     <td style="text-align:center;" class="pres-total"><strong>{{ (int) $ligne->total }}</strong></td>
                                     <td>
-                                <div class="pres-row-actions">
-                                    @if(auth()->user()->role === 'super_admin')
-                                        @if(isset($signatures[$jour->toDateString()]))
-                                            <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">SignÃ© le {{ \Carbon\Carbon::parse($signatures[$jour->toDateString()])->format('d/m/Y') }}</span>
-                                            <a href="{{ route('presences.pdf', ['date' => $jour->toDateString()]) }}" class="btn btn-green" style="padding:5px 10px;">ðŸ“„ TÃ©lÃ©charger PDF</a>
-                                        @else
-                                            <form method="POST" action="{{ route('presences.signer', $jour->toDateString()) }}">
-                                                @csrf
-                                                <button class="btn btn-gold" style="padding:5px 10px;">Signer la liste</button>
-                                            </form>
-                                        @endif
-                                    @else
-                                        <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">En attente de signature</span>
-                                    @endif
-                                    <a href="/nouvelle-seance?date={{ $jour->toDateString() }}" class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
-                                </div>
-                        </tbody>
+                                        <div class="pres-row-actions">
+                                            @if(auth()->user()->role === 'super_admin')
+                                                @if(isset($signatures[$jour->toDateString()]))
+                                                    <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">Signé</span>
+                                                    <a href="{{ route('presences.pdf', ['date' => $jour->toDateString()]) }}" class="btn btn-green" style="padding:5px 10px;">PDF</a>
+                                                @else
+                                                    <form method="POST" action="{{ route('presences.signer', $jour->toDateString()) }}">
+                                                        @csrf
+                                                        <button class="btn btn-gold" style="padding:5px 10px;">Signer</button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">En attente</span>
+                                            @endif
+                                            <a href="/nouvelle-seance?date={{ $jour->toDateString() }}" class="btn btn-navy" style="padding:5px 10px;">Modifier</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 @endif

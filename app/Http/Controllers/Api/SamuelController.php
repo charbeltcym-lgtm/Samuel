@@ -221,11 +221,13 @@ class SamuelController extends Controller
         $data = $request->validate([
             'nom' => 'required|string|max:255',
             'prenoms' => 'required|string|max:255',
+            'ordre' => 'nullable|integer|min:0|max:9999',
         ]);
 
         $samuel = Samuel::create([
             'nom' => trim($data['nom']),
             'prenoms' => trim($data['prenoms']),
+            'ordre' => $data['ordre'] ?? 100,
         ]);
 
         Notification::notifierAdmins(
@@ -249,11 +251,15 @@ class SamuelController extends Controller
         $data = $request->validate([
             'nom' => 'sometimes|string|max:255',
             'prenoms' => 'sometimes|nullable|string|max:255',
+            'ordre' => 'sometimes|nullable|integer|min:0|max:9999',
         ]);
+
+        if (array_key_exists('nom', $data)) $data['nom'] = trim($data['nom']);
+        if (array_key_exists('prenoms', $data)) $data['prenoms'] = $data['prenoms'] !== null ? trim($data['prenoms']) : null;
 
         $samuel->update($data);
 
-        return response()->json(['message' => 'Samuel mis à jour', 'samuel' => $samuel]);
+        return response()->json(['message' => 'Samuel mis à jour', 'samuel' => $samuel->fresh()]);
     }
 
     public function destroySamuel($id)
