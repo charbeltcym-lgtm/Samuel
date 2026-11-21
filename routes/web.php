@@ -513,21 +513,42 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             : null;
 
         $dates = $datesIso->map(fn ($d) => \Carbon\Carbon::parse($d))->values();
-        $presencesByDate = [];
-        foreach ($datesIso as $dateIso) {
-            $presencesByDate[$dateIso] = \App\Models\Presence::whereDate('date_repetition', $dateIso)
-                ->get()
-                ->keyBy('samuel_id');
+        $allPresences = \App\Models\Presence::where(function ($q) use ($datesIso) {
+            foreach ($datesIso as $d) {
+                $q->orWhereDate('date_repetition', $d);
+            }
+        })->get();
+        $bySamuelDate = [];
+        foreach ($allPresences as $p) {
+            $d = \Carbon\Carbon::parse($p->date_repetition)->toDateString();
+            $bySamuelDate[$p->samuel_id][$d] = $p->statut;
         }
 
-        $orientation = count($dates) > 4 ? 'landscape' : 'portrait';
+        $rows = $samuels->map(function ($samuel) use ($datesIso, $bySamuelDate) {
+            $presents = $absents = $retards = $permissions = 0;
+            foreach ($datesIso as $d) {
+                $statut = $bySamuelDate[$samuel->id][$d] ?? null;
+                if ($statut === 'present') $presents++;
+                elseif ($statut === 'absent') $absents++;
+                elseif ($statut === 'retard') $retards++;
+                elseif ($statut === 'permissionnaire') $permissions++;
+            }
+            return [
+                'samuel' => $samuel,
+                'presents' => $presents,
+                'absents' => $absents,
+                'retards' => $retards,
+                'permissions' => $permissions,
+                'non_renseignes' => $datesIso->count() - ($presents + $absents + $retards + $permissions),
+            ];
+        });
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.presences-pdf-multi', [
             'dates' => $dates,
-            'samuels' => $samuels,
-            'presencesByDate' => $presencesByDate,
+            'rows' => $rows,
             'logo' => $logoBase64,
             'signature' => $signature,
-        ])->setPaper('a4', $orientation);
+        ])->setPaper('a4', 'portrait');
 
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
