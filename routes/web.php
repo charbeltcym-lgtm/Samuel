@@ -435,7 +435,13 @@ Route::middleware(['auth', 'web.super'])->group(function () {
 
         $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
         if (! $session) {
-            return back()->withErrors(['pdf' => 'La liste doit être signée par le super administrateur avant de pouvoir être téléchargée.']);
+            $session = \App\Models\PresenceSession::create([
+                'date_repetition' => $dateIso,
+                'signed_at' => now(),
+                'signed_by' => $user->id,
+            ]);
+        } elseif (! $session->signed_at) {
+            $session->update(['signed_at' => now(), 'signed_by' => $user->id]);
         }
 
         $samuels = \App\Models\Samuel::ordonne()->get();
@@ -486,13 +492,14 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             ->sort()
             ->values();
 
-        $sessions = \App\Models\PresenceSession::whereIn('date_repetition', $datesIso->all())->pluck('date_repetition')
-            ->map(fn ($d) => \Carbon\Carbon::parse($d)->toDateString())
-            ->flip();
-
-        $nonSignees = $datesIso->reject(fn ($d) => $sessions->has($d))->values();
-        if ($nonSignees->isNotEmpty()) {
-            return back()->withErrors(['pdf' => 'Toutes les dates sélectionnées doivent être signées avant téléchargement. Non signée(s) : ' . $nonSignees->map(fn ($d) => \Carbon\Carbon::parse($d)->format('d/m/Y'))->implode(', ') . '.']);
+        $existing = \App\Models\PresenceSession::whereIn('date_repetition', $datesIso->all())->get()->keyBy(fn ($s) => \Carbon\Carbon::parse($s->date_repetition)->toDateString());
+        foreach ($datesIso as $d) {
+            $s = $existing->get($d);
+            if (! $s) {
+                \App\Models\PresenceSession::create(['date_repetition' => $d, 'signed_at' => now(), 'signed_by' => $user->id]);
+            } elseif (! $s->signed_at) {
+                $s->update(['signed_at' => now(), 'signed_by' => $user->id]);
+            }
         }
 
         $samuels = \App\Models\Samuel::ordonne()->get();

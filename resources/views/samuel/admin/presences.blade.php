@@ -56,9 +56,9 @@
                         <form id="multiPdfForm" method="POST" action="{{ route('presences.pdf.multiple') }}" style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                             @csrf
                             <button type="submit" class="btn btn-green" style="padding:8px 14px;">📄 Télécharger la sélection (PDF)</button>
-                            <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=true)">Tout sélectionner (signées)</button>
+                            <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=true)">Tout sélectionner</button>
                             <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=false)">Vider</button>
-                            <span style="font-size:12px; color:#6B7280;">Seules les listes signées sont téléchargeables.</span>
+                            <span style="font-size:12px; color:#6B7280;">Coche le/les samedi(s) voulu(s), puis télécharge. Les listes non signées seront signées par toi au téléchargement.</span>
                         </form>
                     @endif
                     <div class="table-wrap">
@@ -83,11 +83,7 @@
                                 <tr>
                                     @if(auth()->user()->role === 'super_admin')
                                         <td style="text-align:center;">
-                                            @if($signed)
-                                                <input type="checkbox" name="dates[]" value="{{ $dateStr }}" form="multiPdfForm" class="sel-presence" style="width:18px; height:18px;">
-                                            @else
-                                                <span style="color:#9CA3AF;">—</span>
-                                            @endif
+                                            <input type="checkbox" name="dates[]" value="{{ $dateStr }}" form="multiPdfForm" class="sel-presence" style="width:18px; height:18px;">
                                         </td>
                                     @endif
                                     <td>
@@ -104,13 +100,13 @@
                                             @if(auth()->user()->role === 'super_admin')
                                                 @if(isset($signatures[$jour->toDateString()]))
                                                     <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">Signé</span>
-                                                    <a href="{{ route('presences.pdf', ['date' => $jour->toDateString()]) }}" class="btn btn-green" style="padding:5px 10px;">PDF</a>
                                                 @else
-                                                    <form method="POST" action="{{ route('presences.signer', $jour->toDateString()) }}">
+                                                    <form method="POST" action="{{ route('presences.signer', $jour->toDateString()) }}" style="display:inline;">
                                                         @csrf
                                                         <button class="btn btn-gold" style="padding:5px 10px;">Signer</button>
                                                     </form>
                                                 @endif
+                                                <a href="{{ route('presences.pdf', ['date' => $jour->toDateString()]) }}" class="btn btn-green" style="padding:5px 10px;">PDF</a>
                                             @else
                                                 <span class="btn btn-light" style="padding:5px 10px; opacity:.7;">En attente</span>
                                             @endif
