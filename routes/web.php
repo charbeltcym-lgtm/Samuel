@@ -466,6 +466,73 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         return $pdf->download('presences-' . $dateIso . '.pdf');
     })->name('presences.pdf');
 
+    Route::post('/presences/pdf-multiple', function () {
+        $user = auth()->user();
+        if ($user->role !== 'super_admin') {
+            abort(403, 'Seul le super administrateur peut télécharger les documents signés.');
+        }
+
+        $data = request()->validate([
+            'dates' => 'required|array|min:1',
+            'dates.*' => 'required|date',
+        ], [
+            'dates.required' => 'Sélectionnez au moins une date.',
+            'dates.min' => 'Sélectionnez au moins une date.',
+        ]);
+
+        $datesIso = collect($data['dates'])
+            ->map(fn ($d) => \Carbon\Carbon::parse($d)->toDateString())
+            ->unique()
+            ->sort()
+            ->values();
+
+        $sessions = \App\Models\PresenceSession::whereIn('date_repetition', $datesIso->all())->pluck('date_repetition')
+            ->map(fn ($d) => \Carbon\Carbon::parse($d)->toDateString())
+            ->flip();
+
+        $nonSignees = $datesIso->reject(fn ($d) => $sessions->has($d))->values();
+        if ($nonSignees->isNotEmpty()) {
+            return back()->withErrors(['pdf' => 'Toutes les dates sélectionnées doivent être signées avant téléchargement. Non signée(s) : ' . $nonSignees->map(fn ($d) => \Carbon\Carbon::parse($d)->format('d/m/Y'))->implode(', ') . '.']);
+        }
+
+        $samuels = \App\Models\Samuel::ordonne()->get();
+        $logo = public_path('images/logo-pdf.png');
+        $logoBase64 = file_exists($logo)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logo))
+            : null;
+
+        $sections = $datesIso->map(function ($dateIso) use ($samuels) {
+            $date = \Carbon\Carbon::parse($dateIso);
+            $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
+                ->get()
+                ->keyBy('samuel_id');
+            return [
+                'date' => $date,
+                'dateIso' => $dateIso,
+                'samuels' => $samuels,
+                'presences' => $presences,
+            ];
+        })->all();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.presences-pdf-multi', [
+            'sections' => $sections,
+            'logo' => $logoBase64,
+        ])->setPaper('a4', 'portrait');
+
+        \App\Models\Activity::create([
+            'user_id' => auth()->id(),
+            'action' => 'presence.pdf.multiple',
+            'description' => 'Liste(s) de présence téléchargée(s) (PDF) pour ' . count($sections) . ' date(s).',
+            'ip_address' => request()->ip(),
+        ]);
+
+        $name = count($sections) === 1
+            ? 'presences-' . $datesIso->first() . '.pdf'
+            : 'presences-' . $datesIso->first() . '-au-' . $datesIso->last() . '.pdf';
+
+        return $pdf->download($name);
+    })->name('presences.pdf.multiple');
+
     Route::get('/historique', function () {
         $activites = \App\Models\Activity::with('user')->orderByDesc('created_at')->get();
         return view('samuel.admin.historique', compact('activites'));

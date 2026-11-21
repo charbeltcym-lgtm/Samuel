@@ -44,15 +44,30 @@
             <div class="panel">
                 <div class="page-head">
                     <h3>Historique des présences</h3>
-                    <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la présence</a>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <a href="/nouvelle-seance?date={{ now()->copy()->previous(\Carbon\Carbon::SATURDAY)->toDateString() }}" class="btn btn-light">Samedi passé</a>
+                        <a href="/nouvelle-seance" class="btn btn-gold">+ Faire la présence</a>
+                    </div>
                 </div>
                 @if ($dates->isEmpty())
                     <div class="empty-state"><div class="icon">✅</div><p>Aucune présence enregistrée pour le moment</p><p style="font-size:13px;">Les répétitions ont lieu tous les samedis</p></div>
                 @else
+                    @if(auth()->user()->role === 'super_admin')
+                        <form id="multiPdfForm" method="POST" action="{{ route('presences.pdf.multiple') }}" style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            @csrf
+                            <button type="submit" class="btn btn-green" style="padding:8px 14px;">📄 Télécharger la sélection (PDF)</button>
+                            <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=true)">Tout sélectionner (signées)</button>
+                            <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=false)">Vider</button>
+                            <span style="font-size:12px; color:#6B7280;">Seules les listes signées sont téléchargeables.</span>
+                        </form>
+                    @endif
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
+                                    @if(auth()->user()->role === 'super_admin')
+                                        <th style="width:44px; text-align:center;">Sel.</th>
+                                    @endif
                                     <th>Date (samedi)</th>
                                     <th style="text-align:center;">Présents</th>
                                     <th style="text-align:center;">Absents</th>
@@ -64,8 +79,17 @@
                             </thead>
                             <tbody>
                                 @foreach ($dates as $ligne)
-                                @php $jour = \Carbon\Carbon::parse($ligne->date_repetition); @endphp
+                                @php $jour = \Carbon\Carbon::parse($ligne->date_repetition); $dateStr = $jour->toDateString(); $signed = isset($signatures[$dateStr]); @endphp
                                 <tr>
+                                    @if(auth()->user()->role === 'super_admin')
+                                        <td style="text-align:center;">
+                                            @if($signed)
+                                                <input type="checkbox" name="dates[]" value="{{ $dateStr }}" form="multiPdfForm" class="sel-presence" style="width:18px; height:18px;">
+                                            @else
+                                                <span style="color:#9CA3AF;">—</span>
+                                            @endif
+                                        </td>
+                                    @endif
                                     <td>
                                         <strong>{{ $jour->format('d/m/Y') }}</strong>
                                         <div style="font-size:12px; color:#6B7280;">{{ $jour->translatedFormat('l') }}</div>

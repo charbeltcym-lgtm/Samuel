@@ -88,6 +88,10 @@
                     <a href="/presences" class="btn btn-light" style="padding:11px 20px;">Historique</a>
                     <a href="{{ route('presences.pdf', ['date' => $dateIso]) }}" class="btn btn-gold" style="padding:11px 20px;">📄 Télécharger le PDF</a>
                 </form>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin:-8px 0 18px;">
+                    <a href="/nouvelle-seance?date={{ now()->copy()->previous(\Carbon\Carbon::SATURDAY)->toDateString() }}" class="btn btn-light" style="padding:8px 12px; font-size:13px;">Samedi passé</a>
+                    <a href="/nouvelle-seance?date={{ now()->copy()->previous(\Carbon\Carbon::SATURDAY)->subWeek()->toDateString() }}" class="btn btn-light" style="padding:8px 12px; font-size:13px;">Il y a 2 samedis</a>
+                </div>
 
                 <div class="statut-legend">
                     <span class="leg-present">Présent</span>
