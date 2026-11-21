@@ -433,16 +433,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(403, 'Seul le super administrateur peut télécharger le document signé.');
         }
 
-        $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
-        if (! $session) {
-            $session = \App\Models\PresenceSession::create([
-                'date_repetition' => $dateIso,
-                'signed_at' => now(),
-                'signed_by' => $user->id,
-            ]);
-        } elseif (! $session->signed_at) {
-            $session->update(['signed_at' => now(), 'signed_by' => $user->id]);
-        }
+        // Le super admin peut télécharger pour imprimer/signer à la main.
 
         $samuels = \App\Models\Samuel::ordonne()->get();
         $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
@@ -492,15 +483,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             ->sort()
             ->values();
 
-        $existing = \App\Models\PresenceSession::whereIn('date_repetition', $datesIso->all())->get()->keyBy(fn ($s) => \Carbon\Carbon::parse($s->date_repetition)->toDateString());
-        foreach ($datesIso as $d) {
-            $s = $existing->get($d);
-            if (! $s) {
-                \App\Models\PresenceSession::create(['date_repetition' => $d, 'signed_at' => now(), 'signed_by' => $user->id]);
-            } elseif (! $s->signed_at) {
-                $s->update(['signed_at' => now(), 'signed_by' => $user->id]);
-            }
-        }
+        // Téléchargement autorisé pour impression/signature manuelle par le super admin.
 
         $samuels = \App\Models\Samuel::ordonne()->get();
         $logo = public_path('images/logo-pdf.png');

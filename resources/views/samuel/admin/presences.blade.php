@@ -58,7 +58,7 @@
                             <button type="submit" class="btn btn-green" style="padding:8px 14px;">📄 Télécharger la sélection (PDF)</button>
                             <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=true)">Tout sélectionner</button>
                             <button type="button" class="btn btn-light" style="padding:8px 14px;" onclick="document.querySelectorAll('.sel-presence').forEach(c=>c.checked=false)">Vider</button>
-                            <span style="font-size:12px; color:#6B7280;">Coche le/les samedi(s) voulu(s), puis télécharge. Les listes non signées seront signées par toi au téléchargement.</span>
+                            <span style="font-size:12px; color:#6B7280;">Coche le/les samedi(s) voulu(s) puis télécharge le PDF pour l’imprimer et le signer à la main. Clique « Signer » après avoir signé.</span>
                         </form>
                     @endif
                     <div class="table-wrap">
