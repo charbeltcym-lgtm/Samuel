@@ -410,6 +410,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(422);
         }
 
+        $dateIso = $carbone->toDateString();
         $payload = [
             'signed_at' => now(),
             'signed_by' => $user->id,
@@ -417,10 +418,12 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         if (request()->filled('signature')) {
             $payload['signature'] = request('signature');
         }
-        \App\Models\PresenceSession::updateOrCreate(
-            ['date_repetition' => $carbone->toDateString()],
-            $payload
-        );
+        $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
+        if ($session) {
+            $session->update($payload);
+        } else {
+            \App\Models\PresenceSession::create(array_merge(['date_repetition' => $dateIso], $payload));
+        }
 
         return back()->with('success', 'Liste signée pour le ' . $carbone->format('d/m/Y') . '.');
     })->name('presences.signer');
@@ -436,10 +439,10 @@ Route::middleware(['auth', 'web.super'])->group(function () {
 
         $signature = request('signature');
         if ($signature) {
-            \App\Models\PresenceSession::updateOrCreate(
-                ['date_repetition' => $dateIso],
-                ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature]
-            );
+            $payload = ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature];
+            $existing = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
+            if ($existing) { $existing->update($payload); }
+            else { \App\Models\PresenceSession::create(array_merge(['date_repetition' => $dateIso], $payload)); }
         }
         $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
         $signatureImg = $signature ?: ($session->signature ?? null);
@@ -496,10 +499,10 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $signature = request('signature');
         if ($signature) {
             foreach ($datesIso as $d) {
-                \App\Models\PresenceSession::updateOrCreate(
-                    ['date_repetition' => $d],
-                    ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature]
-                );
+                $payload = ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature];
+                $existing = \App\Models\PresenceSession::whereDate('date_repetition', $d)->first();
+                if ($existing) { $existing->update($payload); }
+                else { \App\Models\PresenceSession::create(array_merge(['date_repetition' => $d], $payload)); }
             }
         }
 
