@@ -512,24 +512,22 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             ? 'data:image/png;base64,' . base64_encode(file_get_contents($logo))
             : null;
 
-        $sections = $datesIso->map(function ($dateIso) use ($samuels) {
-            $date = \Carbon\Carbon::parse($dateIso);
-            $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
+        $dates = $datesIso->map(fn ($d) => \Carbon\Carbon::parse($d))->values();
+        $presencesByDate = [];
+        foreach ($datesIso as $dateIso) {
+            $presencesByDate[$dateIso] = \App\Models\Presence::whereDate('date_repetition', $dateIso)
                 ->get()
                 ->keyBy('samuel_id');
-            return [
-                'date' => $date,
-                'dateIso' => $dateIso,
-                'samuels' => $samuels,
-                'presences' => $presences,
-            ];
-        })->all();
+        }
 
+        $orientation = count($dates) > 4 ? 'landscape' : 'portrait';
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.presences-pdf-multi', [
-            'sections' => $sections,
+            'dates' => $dates,
+            'samuels' => $samuels,
+            'presencesByDate' => $presencesByDate,
             'logo' => $logoBase64,
             'signature' => $signature,
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('a4', $orientation);
 
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
