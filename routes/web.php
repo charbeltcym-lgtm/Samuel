@@ -532,11 +532,11 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         \App\Models\Activity::create([
             'user_id' => auth()->id(),
             'action' => 'presence.pdf.multiple',
-            'description' => 'Liste(s) de présence téléchargée(s) (PDF) pour ' . count($sections) . ' date(s).',
+            'description' => 'Liste(s) de présence téléchargée(s) (PDF) pour ' . $dates->count() . ' date(s).',
             'ip_address' => request()->ip(),
         ]);
 
-        $name = count($sections) === 1
+        $name = $dates->count() === 1
             ? 'presences-' . $datesIso->first() . '.pdf'
             : 'presences-' . $datesIso->first() . '-au-' . $datesIso->last() . '.pdf';
 
