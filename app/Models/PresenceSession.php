@@ -10,6 +10,7 @@ class PresenceSession extends Model
         'date_repetition',
         'signed_at',
         'signed_by',
+        'signature',
     ];
 
     protected $casts = [

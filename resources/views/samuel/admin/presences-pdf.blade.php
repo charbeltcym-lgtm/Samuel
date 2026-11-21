@@ -134,7 +134,12 @@
         <tr>
             <td>
                 Le responsable
-                <div class="line"></div>
+                @if(!empty($signature))
+                    <div style="margin-top:8px;"><img src="{{ $signature }}" style="height:55px; max-width:220px;"></div>
+                @else
+                    <div class="line"></div>
+                @endif
+                <div style="border-top:1px solid #9CA3AF; width:70%; margin-top:4px;"></div>
             </td>
             <td class="right">
                 Fait le {{ $date->format('d/m/Y') }}

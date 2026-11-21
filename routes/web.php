@@ -410,21 +410,22 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(422);
         }
 
-        $existing = \App\Models\PresenceSession::whereDate('date_repetition', $carbone->toDateString())->first();
-        if ($existing) {
-            $existing->update(['signed_at' => now(), 'signed_by' => $user->id]);
-        } else {
-            \App\Models\PresenceSession::create([
-                'date_repetition' => $carbone->toDateString(),
-                'signed_at' => now(),
-                'signed_by' => $user->id,
-            ]);
+        $payload = [
+            'signed_at' => now(),
+            'signed_by' => $user->id,
+        ];
+        if (request()->filled('signature')) {
+            $payload['signature'] = request('signature');
         }
+        \App\Models\PresenceSession::updateOrCreate(
+            ['date_repetition' => $carbone->toDateString()],
+            $payload
+        );
 
         return back()->with('success', 'Liste signée pour le ' . $carbone->format('d/m/Y') . '.');
     })->name('presences.signer');
 
-    Route::get('/presences/pdf', function () {
+    Route::match(['GET', 'POST'], '/presences/pdf', function () {
         $date = \App\Support\DateRepetition::resoudre(request('date'));
         $dateIso = $date->toDateString();
 
@@ -433,7 +434,15 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             abort(403, 'Seul le super administrateur peut télécharger le document signé.');
         }
 
-        // Le super admin peut télécharger pour imprimer/signer à la main.
+        $signature = request('signature');
+        if ($signature) {
+            \App\Models\PresenceSession::updateOrCreate(
+                ['date_repetition' => $dateIso],
+                ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature]
+            );
+        }
+        $session = \App\Models\PresenceSession::whereDate('date_repetition', $dateIso)->first();
+        $signatureImg = $signature ?: ($session->signature ?? null);
 
         $samuels = \App\Models\Samuel::ordonne()->get();
         $presences = \App\Models\Presence::whereDate('date_repetition', $dateIso)
@@ -451,6 +460,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             'samuels' => $samuels,
             'presences' => $presences,
             'logo' => $logoBase64,
+            'signature' => $signatureImg,
         ])->setPaper('a4', 'portrait');
 
         \App\Models\Activity::create([
@@ -483,7 +493,15 @@ Route::middleware(['auth', 'web.super'])->group(function () {
             ->sort()
             ->values();
 
-        // Téléchargement autorisé pour impression/signature manuelle par le super admin.
+        $signature = request('signature');
+        if ($signature) {
+            foreach ($datesIso as $d) {
+                \App\Models\PresenceSession::updateOrCreate(
+                    ['date_repetition' => $d],
+                    ['signed_at' => now(), 'signed_by' => $user->id, 'signature' => $signature]
+                );
+            }
+        }
 
         $samuels = \App\Models\Samuel::ordonne()->get();
         $logo = public_path('images/logo-pdf.png');
@@ -507,6 +525,7 @@ Route::middleware(['auth', 'web.super'])->group(function () {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('samuel.admin.presences-pdf-multi', [
             'sections' => $sections,
             'logo' => $logoBase64,
+            'signature' => $signature,
         ])->setPaper('a4', 'portrait');
 
         \App\Models\Activity::create([

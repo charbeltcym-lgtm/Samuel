@@ -7,8 +7,8 @@
         @page { margin: 15mm 12mm 18mm 12mm; }
         * { box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; color: #1F2937; font-size: 11px; margin: 0; }
-        .section { page-break-after: always; }
-        .section:last-child { page-break-after: auto; }
+        .section { margin-bottom: 28px; padding-bottom: 18px; border-bottom: 2px dashed #CBD5E1; }
+        .section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 
         .header { width: 100%; border-collapse: collapse; border-bottom: 3px solid #D4A72C; margin-bottom: 16px; }
         .header td { border: none; padding: 0 0 10px; vertical-align: middle; }
@@ -136,19 +136,25 @@
                 </tbody>
             </table>
 
-            <table class="signatures">
-                <tr>
-                    <td>
-                        Le responsable
-                        <div class="line"></div>
-                    </td>
-                    <td class="right">
-                        Fait le {{ $date->format('d/m/Y') }}
-                        <div class="line"></div>
-                    </td>
-                </tr>
-            </table>
         </div>
     @endforeach
+
+    <table class="signatures" style="margin-top:30px;">
+        <tr>
+            <td>
+                Le responsable
+                @if(!empty($signature))
+                    <div style="margin-top:8px;"><img src="{{ $signature }}" style="height:55px; max-width:220px;"></div>
+                @else
+                    <div class="line"></div>
+                @endif
+                <div style="border-top:1px solid #9CA3AF; width:70%; margin-top:4px;"></div>
+            </td>
+            <td class="right">
+                Fait le {{ now()->format('d/m/Y') }}
+                <div class="line"></div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
